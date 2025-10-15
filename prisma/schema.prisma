@@ -1,0 +1,190 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String       @id @default(cuid())
+  email         String       @unique
+  password      String
+  name          String
+  role          String       // ADMIN, EMPLOYER, SEEKER
+  status        String       @default("ACTIVE") // ACTIVE, SUSPENDED, DELETED
+  avatar        String?
+  emailVerified DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  // Relations
+  seekerProfile    JobSeekerProfile?
+  employerProfile  EmployerProfile?
+  jobs             Job[]
+  applications     Application[]
+  sentMessages     Message[]         @relation("SentMessages")
+  chatParticipants ChatParticipant[]
+  notifications    Notification[]
+
+  @@index([email])
+  @@index([role])
+  @@index([status])
+}
+
+model JobSeekerProfile {
+  id                String             @id @default(cuid())
+  userId            String             @unique
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  phone             String?
+  location          String?
+  bio               String?
+  resumeUrl         String?
+  skills            String?            // JSON array stored as string
+  experience        String?            // JSON array stored as string
+  education         String?            // JSON array stored as string
+  preferredJobTypes String?            // JSON array stored as string
+  expectedSalary    String?
+  availability      String             @default("IMMEDIATELY") // IMMEDIATELY, WITHIN_2_WEEKS, WITHIN_1_MONTH, NOT_AVAILABLE
+  
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  @@index([userId])
+  @@index([availability])
+}
+
+model EmployerProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  companyName String
+  companySize String?
+  industry    String?
+  location    String?
+  website     String?
+  description String?
+  logo        String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Job {
+  id               String        @id @default(cuid())
+  employerId       String
+  employer         User          @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  
+  title            String
+  description      String
+  requirements     String?       // JSON array stored as string
+  responsibilities String?       // JSON array stored as string
+  skills           String?       // JSON array stored as string
+  salary           String?
+  location         String
+  type             String        // FULL_TIME, PART_TIME, CONTRACT, FREELANCE, INTERNSHIP
+  status           String        @default("DRAFT") // OPEN, CLOSED, DRAFT
+  
+  postedAt         DateTime?
+  expiresAt        DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  
+  // Relations
+  applications     Application[]
+
+  @@index([employerId])
+  @@index([status])
+  @@index([type])
+  @@index([postedAt])
+}
+
+model Application {
+  id          String            @id @default(cuid())
+  jobId       String
+  job         Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  seekerId    String
+  seeker      User              @relation(fields: [seekerId], references: [id], onDelete: Cascade)
+  
+  coverLetter String?
+  resumeUrl   String?
+  status      String            @default("PENDING") // PENDING, REVIEWED, ACCEPTED, REJECTED
+  
+  appliedAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@unique([jobId, seekerId])
+  @@index([jobId])
+  @@index([seekerId])
+  @@index([status])
+}
+
+model Chat {
+  id            String            @id @default(cuid())
+  lastMessage   String?
+  lastMessageAt DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  
+  // Relations
+  participants  ChatParticipant[]
+  messages      Message[]
+
+  @@index([lastMessageAt])
+}
+
+model ChatParticipant {
+  id        String   @id @default(cuid())
+  chatId    String
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+
+  @@unique([chatId, userId])
+  @@index([chatId])
+  @@index([userId])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  chatId    String
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  
+  content   String
+  read      Boolean  @default(false)
+  type      String   @default("TEXT") // TEXT, FILE
+  
+  sentAt    DateTime @default(now())
+
+  @@index([chatId])
+  @@index([senderId])
+  @@index([sentAt])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type      String           // APPLICATION, MESSAGE, JOB_UPDATE, SYSTEM
+  title     String
+  message   String
+  link      String?
+  data      String?          // JSON data stored as string
+  read      Boolean          @default(false)
+  
+  createdAt DateTime         @default(now())
+
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
+}
