@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -87,6 +88,21 @@ export function LoginForm() {
               required
               disabled={loading}
             />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Link
+              href="/"
+              className="text-sm text-muted-foreground hover:text-amber-600 transition-colors"
+            >
+              ← Back to Home
+            </Link>
+            <Link
+              href="/forgot-password"
+              className="text-sm text-amber-600 hover:text-amber-700 dark:text-amber-500 dark:hover:text-amber-400 transition-colors"
+            >
+              Forgot password?
+            </Link>
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>

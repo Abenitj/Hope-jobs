@@ -4,7 +4,7 @@ import next from "next"
 import { initSocketServer } from "./src/lib/socket"
 
 const dev = process.env.NODE_ENV !== "production"
-const hostname = "localhost"
+const hostname = "0.0.0.0" // Listen on all network interfaces
 const port = parseInt(process.env.PORT || "3000", 10)
 
 const app = next({ dev, hostname, port })
@@ -36,8 +36,9 @@ app.prepare().then(() => {
     process.exit(1)
   })
 
-  httpServer.listen(port, () => {
-    console.log(`> Ready on http://${hostname}:${port}`)
+  httpServer.listen(port, hostname, () => {
+    console.log(`> Ready on http://localhost:${port}`)
+    console.log(`> Network: http://192.168.0.122:${port}`)
   })
 })
 

@@ -27,6 +27,7 @@ model User {
   sentMessages     Message[]         @relation("SentMessages")
   chatParticipants ChatParticipant[]
   notifications    Notification[]
+  passwordResets   PasswordReset[]
 
   @@index([email])
   @@index([role])
@@ -189,21 +190,17 @@ model Notification {
   @@index([createdAt])
 }
 
-model SMTPConfig {
+model PasswordReset {
   id        String   @id @default(cuid())
-  name      String   @unique // Configuration name (e.g., "primary", "backup")
-  host      String   // SMTP server host
-  port      Int      // SMTP server port (e.g., 587, 465, 25)
-  username  String   // SMTP username/email
-  password  String   // SMTP password (encrypted)
-  fromEmail String   // Default sender email
-  fromName  String   // Default sender name
-  secure    Boolean  @default(true) // Use TLS/SSL
-  isActive  Boolean  @default(false) // Only one can be active at a time
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
   
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
-  @@index([isActive])
-  @@index([name])
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
 }

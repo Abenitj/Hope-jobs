@@ -10,8 +10,7 @@ import {
   BarChart3,
   UserCircle,
   LogOut,
-  Menu,
-  Settings
+  Menu
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -31,7 +30,6 @@ const navigation = [
   { name: "Users", href: "/admin/users", icon: Users },
   { name: "Jobs", href: "/admin/jobs", icon: Briefcase },
   { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
-  { name: "SMTP Settings", href: "/admin/smtp", icon: Settings },
   { name: "Profile", href: "/admin/profile", icon: UserCircle },
 ]
 
