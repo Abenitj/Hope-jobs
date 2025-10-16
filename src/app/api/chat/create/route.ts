@@ -26,46 +26,77 @@ export async function POST(req: Request) {
           {
             participants: {
               some: {
-                id: session.user.id,
+                userId: session.user.id,
               },
             },
           },
           {
             participants: {
               some: {
-                id: participantId,
+                userId: participantId,
               },
             },
           },
         ],
       },
+      include: {
+        participants: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatar: true,
+                role: true,
+              },
+            },
+          },
+        },
+      },
     })
 
     if (existingChat) {
-      return NextResponse.json(existingChat)
+      const transformedChat = {
+        ...existingChat,
+        participants: existingChat.participants.map(p => p.user),
+      }
+      return NextResponse.json(transformedChat)
     }
 
     // Create new chat
     const chat = await db.chat.create({
       data: {
         participants: {
-          connect: [{ id: session.user.id }, { id: participantId }],
+          create: [
+            { userId: session.user.id },
+            { userId: participantId },
+          ],
         },
       },
       include: {
         participants: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            avatar: true,
-            role: true,
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatar: true,
+                role: true,
+              },
+            },
           },
         },
       },
     })
 
-    return NextResponse.json(chat)
+    const transformedChat = {
+      ...chat,
+      participants: chat.participants.map(p => p.user),
+    }
+
+    return NextResponse.json(transformedChat)
   } catch (error) {
     console.error("Create chat error:", error)
     return NextResponse.json(

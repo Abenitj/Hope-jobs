@@ -23,9 +23,7 @@ export default function NewJobPage() {
         </div>
       </div>
 
-      <div className="max-w-4xl">
-        <JobForm />
-      </div>
+      <JobForm />
     </div>
   )
 }

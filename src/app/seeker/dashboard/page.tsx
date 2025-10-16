@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button"
 import { Briefcase, FileText, Clock, CheckCircle, Eye, MapPin } from "lucide-react"
 import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
+import { ProfileImage } from "./profile-image"
 
 async function getSeekerStats(userId: string) {
   const [applications, profile] = await Promise.all([
     db.application.findMany({
-      where: { applicantId: userId },
+      where: { seekerId: userId },
       include: {
         job: {
           include: {
@@ -32,8 +33,10 @@ async function getSeekerStats(userId: string) {
 
   const statusCounts = {
     pending: applications.filter((app) => app.status === "PENDING").length,
-    reviewed: applications.filter((app) => app.status === "REVIEWED").length,
-    accepted: applications.filter((app) => app.status === "ACCEPTED").length,
+    reviewing: applications.filter((app) => app.status === "REVIEWING").length,
+    shortlisted: applications.filter((app) => app.status === "SHORTLISTED").length,
+    interviewed: applications.filter((app) => app.status === "INTERVIEWED").length,
+    offered: applications.filter((app) => app.status === "OFFERED").length,
     rejected: applications.filter((app) => app.status === "REJECTED").length,
   }
 
@@ -106,15 +109,15 @@ export default async function SeekerDashboard() {
       bgColor: "bg-yellow-100 dark:bg-yellow-900/20",
     },
     {
-      label: "Under Review",
-      value: stats.statusCounts.reviewed,
+      label: "Shortlisted",
+      value: stats.statusCounts.shortlisted,
       icon: Eye,
       color: "text-purple-600",
       bgColor: "bg-purple-100 dark:bg-purple-900/20",
     },
     {
-      label: "Accepted",
-      value: stats.statusCounts.accepted,
+      label: "Offered",
+      value: stats.statusCounts.offered,
       icon: CheckCircle,
       color: "text-green-600",
       bgColor: "bg-green-100 dark:bg-green-900/20",
@@ -122,7 +125,6 @@ export default async function SeekerDashboard() {
   ]
 
   const userName = user?.name || "Job Seeker"
-  const userInitials = userName.split(' ').map(n => n[0]).join('').toUpperCase()
 
   return (
     <div className="space-y-6">
@@ -131,19 +133,7 @@ export default async function SeekerDashboard() {
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -ml-32 -mb-32" />
         <div className="relative z-10 flex items-center gap-4">
-          {user?.avatar ? (
-            <img 
-              src={user.avatar}
-              alt={userName}
-              className="h-20 w-20 rounded-full object-cover border-3 border-white/30 shadow-lg"
-            />
-          ) : (
-            <div className="h-20 w-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/30 shadow-lg flex-shrink-0">
-              <span className="text-3xl font-bold">
-                {userInitials}
-              </span>
-            </div>
-          )}
+          <ProfileImage name={userName} avatar={user?.avatar || null} />
           <div>
             <h1 className="text-2xl font-bold tracking-tight mb-1">
               Welcome Back, {userName}!
@@ -218,11 +208,17 @@ export default async function SeekerDashboard() {
                           className={`text-xs px-2 py-0.5 rounded-full ${
                             app.status === "PENDING"
                               ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400"
-                              : app.status === "REVIEWED"
+                              : app.status === "REVIEWING"
+                              ? "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
+                              : app.status === "SHORTLISTED"
                               ? "bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400"
-                              : app.status === "ACCEPTED"
+                              : app.status === "INTERVIEWED"
+                              ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400"
+                              : app.status === "OFFERED"
                               ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
-                              : "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
+                              : app.status === "REJECTED"
+                              ? "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
+                              : "bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400"
                           }`}
                         >
                           {app.status}

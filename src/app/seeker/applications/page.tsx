@@ -9,7 +9,7 @@ import { formatDistanceToNow } from "date-fns"
 
 async function getUserApplications(userId: string) {
   const applications = await db.application.findMany({
-    where: { applicantId: userId },
+    where: { seekerId: userId },
     include: {
       job: {
         include: {
@@ -38,8 +38,10 @@ export default async function MyApplicationsPage() {
 
   const statusCounts = {
     pending: applications.filter((app) => app.status === "PENDING").length,
-    reviewed: applications.filter((app) => app.status === "REVIEWED").length,
-    accepted: applications.filter((app) => app.status === "ACCEPTED").length,
+    reviewing: applications.filter((app) => app.status === "REVIEWING").length,
+    shortlisted: applications.filter((app) => app.status === "SHORTLISTED").length,
+    interviewed: applications.filter((app) => app.status === "INTERVIEWED").length,
+    offered: applications.filter((app) => app.status === "OFFERED").length,
     rejected: applications.filter((app) => app.status === "REJECTED").length,
   }
 
@@ -83,8 +85,8 @@ export default async function MyApplicationsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Reviewed</p>
-                <p className="text-2xl font-bold mt-1">{statusCounts.reviewed}</p>
+                <p className="text-sm font-medium text-muted-foreground">Shortlisted</p>
+                <p className="text-2xl font-bold mt-1">{statusCounts.shortlisted}</p>
               </div>
               <div className="p-3 rounded-lg bg-purple-100 dark:bg-purple-900/20">
                 <Eye className="h-5 w-5 text-purple-600" />
@@ -96,8 +98,8 @@ export default async function MyApplicationsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Accepted</p>
-                <p className="text-2xl font-bold mt-1">{statusCounts.accepted}</p>
+                <p className="text-sm font-medium text-muted-foreground">Offered</p>
+                <p className="text-2xl font-bold mt-1">{statusCounts.offered}</p>
               </div>
               <div className="p-3 rounded-lg bg-green-100 dark:bg-green-900/20">
                 <Briefcase className="h-5 w-5 text-green-600" />
@@ -185,11 +187,17 @@ export default async function MyApplicationsPage() {
                             className={
                               application.status === "PENDING"
                                 ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400"
-                                : application.status === "REVIEWED"
+                                : application.status === "REVIEWING"
+                                ? "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
+                                : application.status === "SHORTLISTED"
                                 ? "bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400"
-                                : application.status === "ACCEPTED"
+                                : application.status === "INTERVIEWED"
+                                ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400"
+                                : application.status === "OFFERED"
                                 ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
-                                : "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
+                                : application.status === "REJECTED"
+                                ? "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
+                                : "bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400"
                             }
                           >
                             {application.status}

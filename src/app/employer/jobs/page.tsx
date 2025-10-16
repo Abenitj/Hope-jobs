@@ -14,6 +14,7 @@ import {
 import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
 import { JobFilters } from "./job-filters"
+import { DeleteJobButton } from "./delete-job-button"
 
 interface SearchParams {
   search?: string
@@ -29,8 +30,8 @@ async function getEmployerJobs(userId: string, params: SearchParams) {
 
   if (search) {
     where.OR = [
-      { title: { contains: search, mode: "insensitive" } },
-      { description: { contains: search, mode: "insensitive" } },
+      { title: { contains: search } },
+      { description: { contains: search } },
     ]
   }
 
@@ -43,7 +44,7 @@ async function getEmployerJobs(userId: string, params: SearchParams) {
   }
 
   if (location) {
-    where.location = { contains: location, mode: "insensitive" }
+    where.location = { contains: location }
   }
 
   const jobs = await db.job.findMany({
@@ -282,24 +283,25 @@ export default async function EmployerJobsPage({
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent align="end" className="w-48">
                         <DropdownMenuItem asChild>
-                          <Link href={`/employer/applications?job=${job.id}`}>
+                          <Link href={`/employer/applications?job=${job.id}`} className="cursor-pointer">
                             <Users className="h-4 w-4 mr-2" />
                             View Applications ({job._count.applications})
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                          <Link href={`/employer/jobs/${job.id}/edit`}>
+                          <Link href={`/employer/jobs/${job.id}/edit`} className="cursor-pointer">
                             <Edit className="h-4 w-4 mr-2" />
                             Edit Job
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600">
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete Job
-                        </DropdownMenuItem>
+                        <DeleteJobButton 
+                          jobId={job.id} 
+                          jobTitle={job.title}
+                          applicationsCount={job._count.applications}
+                        />
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>

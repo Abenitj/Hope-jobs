@@ -191,7 +191,7 @@ export function SeekerProfileForm({ user, profile }: ProfileFormProps) {
       {/* Profile Picture */}
       <Card>
         <CardHeader>
-          <CardTitle>Profile Picture</CardTitle>
+          <CardTitle>Profile Picture (Optional)</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-6">
@@ -243,12 +243,14 @@ export function SeekerProfileForm({ user, profile }: ProfileFormProps) {
         </CardContent>
       </Card>
 
-      {/* Personal Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      {/* Personal Information and Professional Information - Side by Side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Personal Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Personal Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="firstName">First Name *</Label>
@@ -313,15 +315,15 @@ export function SeekerProfileForm({ user, profile }: ProfileFormProps) {
               rows={4}
             />
           </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Professional Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Professional Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        {/* Professional Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Professional Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="skills">Skills</Label>
             <Textarea
@@ -415,9 +417,11 @@ export function SeekerProfileForm({ user, profile }: ProfileFormProps) {
               PDF, DOC, or DOCX. Max size 10MB.
             </p>
           </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
 
+      {/* Action Buttons */}
       <div className="flex justify-end gap-3">
         <Button
           type="button"

@@ -4,7 +4,9 @@ import { useState } from "react"
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
 } from "@/components/ui/dialog"
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 
 interface ProfileImageProps {
   name: string
@@ -39,6 +41,9 @@ export function ProfileImage({ name, avatar }: ProfileImageProps) {
       {/* Full Image Modal */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-4xl p-0 overflow-hidden bg-transparent border-0">
+          <VisuallyHidden>
+            <DialogTitle>{name} - Profile Picture</DialogTitle>
+          </VisuallyHidden>
           <div className="relative">
             {avatar ? (
               <img 

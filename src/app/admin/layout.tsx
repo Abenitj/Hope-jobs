@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { AdminSidebar } from "@/components/layout/admin-sidebar"
 import { AdminHeader } from "@/components/layout/admin-header"
-import { Toaster } from "@/components/ui/toaster"
+import { Toaster } from "sonner"
 
 export default async function AdminLayout({
   children,

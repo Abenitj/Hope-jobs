@@ -21,7 +21,7 @@ async function searchJobs(params: SearchParams, userId: string) {
 
   // Get user's existing applications
   const existingApplications = await db.application.findMany({
-    where: { applicantId: userId },
+    where: { seekerId: userId },
     select: { jobId: true },
   })
 
@@ -33,9 +33,9 @@ async function searchJobs(params: SearchParams, userId: string) {
 
   if (search) {
     where.OR = [
-      { title: { contains: search, mode: "insensitive" } },
-      { description: { contains: search, mode: "insensitive" } },
-      { requirements: { contains: search, mode: "insensitive" } },
+      { title: { contains: search } },
+      { description: { contains: search } },
+      { requirements: { contains: search } },
     ]
   }
 
@@ -44,7 +44,7 @@ async function searchJobs(params: SearchParams, userId: string) {
   }
 
   if (location) {
-    where.location = { contains: location, mode: "insensitive" }
+    where.location = { contains: location }
   }
 
   const jobs = await db.job.findMany({

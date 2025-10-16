@@ -22,7 +22,7 @@ export async function GET(
         id: chatId,
         participants: {
           some: {
-            id: session.user.id,
+            userId: session.user.id,
           },
         },
       },
@@ -44,10 +44,16 @@ export async function GET(
           },
         },
       },
-      orderBy: { createdAt: "asc" },
+      orderBy: { sentAt: "asc" },
     })
 
-    return NextResponse.json(messages)
+    // Transform to use createdAt for consistency with frontend
+    const transformedMessages = messages.map(m => ({
+      ...m,
+      createdAt: m.sentAt,
+    }))
+
+    return NextResponse.json(transformedMessages)
   } catch (error) {
     console.error("Get messages error:", error)
     return NextResponse.json(
@@ -84,7 +90,7 @@ export async function POST(
         id: chatId,
         participants: {
           some: {
-            id: session.user.id,
+            userId: session.user.id,
           },
         },
       },
@@ -118,15 +124,21 @@ export async function POST(
       data: { updatedAt: new Date() },
     })
 
+    // Transform to use createdAt for consistency with frontend
+    const transformedMessage = {
+      ...message,
+      createdAt: message.sentAt,
+    }
+
     // Emit real-time event
     try {
-      emitToChat(chatId, "message:new", message)
+      emitToChat(chatId, "message:new", transformedMessage)
     } catch (socketError) {
       console.error("Socket emit error:", socketError)
       // Continue even if socket fails
     }
 
-    return NextResponse.json(message)
+    return NextResponse.json(transformedMessage)
   } catch (error) {
     console.error("Send message error:", error)
     return NextResponse.json(

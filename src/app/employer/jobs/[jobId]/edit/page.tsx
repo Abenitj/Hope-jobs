@@ -57,9 +57,7 @@ export default async function EditJobPage({
         </div>
       </div>
 
-      <div className="max-w-4xl">
-        <JobForm job={job} />
-      </div>
+      <JobForm job={job} />
     </div>
   )
 }

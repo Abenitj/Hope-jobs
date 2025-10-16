@@ -61,7 +61,7 @@ export function ProfileImage({ name, avatar }: ProfileImageProps) {
             {/* Name overlay at bottom */}
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 rounded-b-lg">
               <h2 className="text-2xl font-bold text-white drop-shadow-lg">{name}</h2>
-              <p className="text-white/80 text-sm">Employer Profile</p>
+              <p className="text-white/80 text-sm">Job Seeker Profile</p>
             </div>
           </div>
         </DialogContent>

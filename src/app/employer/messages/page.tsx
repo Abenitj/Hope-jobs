@@ -106,7 +106,7 @@ export default async function MessagesPage({
   // If user parameter is provided, create or get chat and redirect
   if (searchParams.user) {
     const chatId = await createOrGetChat(session!.user.id, searchParams.user)
-    redirect(`/seeker/messages?chat=${chatId}`)
+    redirect(`/employer/messages?chat=${chatId}`)
   }
 
   const chats = await getUserChats(session!.user.id)
@@ -125,7 +125,7 @@ export default async function MessagesPage({
             <div>
               <h1 className="text-2xl font-bold tracking-tight">Messages</h1>
               <p className="text-amber-100 text-sm mt-0.5">
-                Chat with employers about job opportunities
+                Chat with job seekers about opportunities
               </p>
             </div>
           </div>
@@ -139,7 +139,7 @@ export default async function MessagesPage({
             <MessageSquare className="h-16 w-16 text-muted-foreground opacity-50 mb-4" />
             <h3 className="text-lg font-semibold mb-2">No messages yet</h3>
             <p className="text-muted-foreground text-center max-w-md">
-              When you connect with employers, your conversations will appear here.
+              When you connect with candidates, your conversations will appear here.
             </p>
           </CardContent>
         </Card>

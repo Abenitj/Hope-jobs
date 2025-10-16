@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     const existingApplication = await db.application.findFirst({
       where: {
         jobId,
-        applicantId: session.user.id,
+        seekerId: session.user.id,
       },
     })
 
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
     const application = await db.application.create({
       data: {
         jobId,
-        applicantId: session.user.id,
+        seekerId: session.user.id,
         coverLetter,
         status: "PENDING",
       },

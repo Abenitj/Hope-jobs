@@ -265,14 +265,15 @@ export default async function JobDetailsPage({
           </Card>
         )}
 
-        {/* Sidebar - 1 column */}
-        <div className="space-y-4">
-          {/* Job Status */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Job Status</CardTitle>
-            </CardHeader>
-            <CardContent>
+        {/* Column 3: Sidebar */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Job Overview</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Status */}
+            <div>
+              <p className="text-sm font-medium mb-2">Status</p>
               <Badge
                 className={`w-full justify-center py-2 text-sm ${
                   job.status === "OPEN"
@@ -284,15 +285,12 @@ export default async function JobDetailsPage({
               >
                 {job.status}
               </Badge>
-            </CardContent>
-          </Card>
+            </div>
 
-          {/* Quick Stats */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Quick Stats</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+            <div className="h-px bg-border" />
+
+            {/* Stats */}
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Posted</span>
                 <span className="text-sm font-medium">
@@ -303,19 +301,12 @@ export default async function JobDetailsPage({
                 <span className="text-sm text-muted-foreground">Applications</span>
                 <span className="text-sm font-medium">{job._count.applications}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Job Type</span>
-                <span className="text-sm font-medium">{job.type.replace("_", " ")}</span>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          {/* Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
+            <div className="h-px bg-border" />
+
+            {/* Actions */}
+            <div className="space-y-2">
               <Button asChild className="w-full">
                 <Link href={`/employer/jobs/${job.id}/edit`}>
                   <Edit className="h-4 w-4 mr-2" />
@@ -325,87 +316,90 @@ export default async function JobDetailsPage({
               <Button variant="outline" asChild className="w-full">
                 <Link href={`/employer/applications?job=${job.id}`}>
                   <Users className="h-4 w-4 mr-2" />
-                  View Applications
+                  All Applications
                 </Link>
               </Button>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Recent Applications */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Recent Applications</CardTitle>
-            <CardDescription>
-              {job._count.applications} total applications for this job
-            </CardDescription>
-          </div>
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/employer/applications?job=${job.id}`}>
-              View All
-            </Link>
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {applications.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <Users className="h-16 w-16 mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-semibold mb-2">No applications yet</h3>
-              <p className="text-sm">
-                Applications will appear here when candidates apply to this job
-              </p>
+      {/* Recent Applications - Full Width Below */}
+      {job.requirements && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/20">
+                  <Users className="h-5 w-5 text-amber-600" />
+                </div>
+                <div>
+                  <CardTitle>Recent Applications</CardTitle>
+                  <CardDescription>
+                    {job._count.applications} candidates applied
+                  </CardDescription>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`/employer/applications?job=${job.id}`}>
+                  View All
+                </Link>
+              </Button>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {applications.map((app) => {
-                const initials = app.seeker.name.split(' ').map(n => n[0]).join('').toUpperCase()
-                
-                return (
-                  <div
-                    key={app.id}
-                    className="flex items-start gap-4 p-4 rounded-lg border hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-                  >
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={app.seeker.avatar || undefined} />
-                      <AvatarFallback className="bg-gradient-to-br from-amber-500 to-orange-600 text-white">
-                        {initials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold">{app.seeker.name}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Applied {formatDistanceToNow(app.appliedAt, { addSuffix: true })}
-                      </p>
-                      <div className="mt-2">
-                        <Badge
-                          className={
-                            app.status === "PENDING"
-                              ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400"
-                              : app.status === "REVIEWED"
-                              ? "bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400"
-                              : app.status === "ACCEPTED"
-                              ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
-                              : "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
-                          }
-                        >
-                          {app.status}
-                        </Badge>
+          </CardHeader>
+          <CardContent>
+            {applications.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <Users className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                <h3 className="text-lg font-semibold mb-2">No applications yet</h3>
+                <p className="text-sm">
+                  Applications will appear here when candidates apply to this job
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {applications.map((app) => {
+                  const initials = app.seeker.name.split(' ').map(n => n[0]).join('').toUpperCase()
+                  
+                  return (
+                    <Link
+                      key={app.id}
+                      href={`/employer/applications/${app.id}`}
+                      className="flex items-center gap-3 p-4 rounded-lg border hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                    >
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={app.seeker.avatar || undefined} />
+                        <AvatarFallback className="bg-gradient-to-br from-amber-500 to-orange-600 text-white">
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{app.seeker.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(app.appliedAt, { addSuffix: true })}
+                        </p>
                       </div>
-                    </div>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/employer/applications/${app.id}`}>
-                        View Details
-                      </Link>
-                    </Button>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                      <Badge
+                        className={`text-xs ${
+                          app.status === "PENDING"
+                            ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400"
+                            : app.status === "REVIEWED"
+                            ? "bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400"
+                            : app.status === "ACCEPTED"
+                            ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                            : "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
+                        }`}
+                      >
+                        {app.status}
+                      </Badge>
+                    </Link>
+                  )
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

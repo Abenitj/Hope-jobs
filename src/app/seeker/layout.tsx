@@ -3,7 +3,8 @@ import { redirect } from "next/navigation"
 import { db } from "@/lib/db"
 import { SeekerSidebar } from "@/components/layout/seeker-sidebar"
 import { SeekerHeader } from "@/components/layout/seeker-header"
-import { Toaster } from "@/components/ui/toaster"
+import { Toaster } from "sonner"
+import { Providers } from "@/components/providers"
 
 export default async function SeekerLayout({
   children,
@@ -31,13 +32,15 @@ export default async function SeekerLayout({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <SeekerSidebar user={user} />
-      <div className="lg:pl-64">
-        <SeekerHeader user={user} title="Job Seeker Dashboard" />
-        <main className="p-6">{children}</main>
+    <Providers>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+        <SeekerSidebar user={user} />
+        <div className="lg:pl-64">
+          <SeekerHeader user={user} title="Job Seeker Dashboard" />
+          <main className="p-6">{children}</main>
+        </div>
+        <Toaster />
       </div>
-      <Toaster />
-    </div>
+    </Providers>
   )
 }

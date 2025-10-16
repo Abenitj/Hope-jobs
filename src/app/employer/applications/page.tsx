@@ -23,7 +23,7 @@ async function getApplications(userId: string, params: SearchParams) {
 
   if (search) {
     where.seeker = {
-      name: { contains: search, mode: "insensitive" },
+      name: { contains: search },
     }
   }
 

@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
-import { Loader2 } from "lucide-react"
+import { Loader2, Briefcase, CheckCircle } from "lucide-react"
 
 interface JobFormProps {
   job?: {
@@ -89,12 +89,19 @@ export function JobForm({ job }: JobFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Job Details */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Job Details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      {/* Two Column Layout */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Left Column: Basic Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/20">
+                <Briefcase className="h-5 w-5 text-blue-600" />
+              </div>
+              Basic Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="title">Job Title *</Label>
             <Input
@@ -105,44 +112,10 @@ export function JobForm({ job }: JobFormProps) {
                 setFormData({ ...formData, title: e.target.value })
               }
               required
+              className="text-lg"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Job Description *</Label>
-            <Textarea
-              id="description"
-              placeholder="Describe the role, responsibilities, and what you're looking for..."
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              rows={6}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="requirements">Requirements</Label>
-            <Textarea
-              id="requirements"
-              placeholder="List the required skills, qualifications, and experience..."
-              value={formData.requirements}
-              onChange={(e) =>
-                setFormData({ ...formData, requirements: e.target.value })
-              }
-              rows={6}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Job Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Job Settings</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="type">Job Type *</Label>
@@ -187,19 +160,20 @@ export function JobForm({ job }: JobFormProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
+              <Label htmlFor="location">Location *</Label>
               <Input
                 id="location"
-                placeholder="e.g., Addis Ababa, Ethiopia"
+                placeholder="e.g., Addis Ababa, Remote"
                 value={formData.location}
                 onChange={(e) =>
                   setFormData({ ...formData, location: e.target.value })
                 }
+                required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="salary">Salary Range</Label>
+              <Label htmlFor="salary">Salary Range (Optional)</Label>
               <Input
                 id="salary"
                 placeholder="e.g., $50,000 - $70,000"
@@ -210,27 +184,82 @@ export function JobForm({ job }: JobFormProps) {
               />
             </div>
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Job Description *</Label>
+            <Textarea
+              id="description"
+              placeholder="Describe the role, responsibilities, and what makes this opportunity unique..."
+              value={formData.description}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
+              rows={12}
+              required
+              className="resize-none"
+            />
+            <p className="text-xs text-muted-foreground">
+              Provide a detailed description of the role and what you're looking for
+            </p>
+          </div>
         </CardContent>
       </Card>
 
+      {/* Right Column: Requirements */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/20">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+            </div>
+            Requirements
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="requirements">Job Requirements (Optional)</Label>
+            <Textarea
+              id="requirements"
+              placeholder="Enter requirements (one per line):&#10;• 5+ years of experience&#10;• Bachelor's degree in Computer Science&#10;• Strong communication skills"
+              value={formData.requirements}
+              onChange={(e) =>
+                setFormData({ ...formData, requirements: e.target.value })
+              }
+              rows={12}
+              className="resize-none font-mono text-sm"
+            />
+            <p className="text-xs text-muted-foreground">
+              List requirements one per line. Each will appear with a checkmark icon.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+
       {/* Action Buttons */}
-      <div className="flex justify-end gap-3">
+      <div className="flex justify-end gap-3 sticky bottom-6 bg-slate-50 dark:bg-slate-950 p-4 -mx-6 -mb-6 border-t">
         <Button
           type="button"
           variant="outline"
           onClick={() => router.back()}
           disabled={loading}
+          size="lg"
         >
           Cancel
         </Button>
-        <Button type="submit" disabled={loading}>
+        <Button 
+          type="submit" 
+          disabled={loading}
+          size="lg"
+          className="min-w-[140px]"
+        >
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               {job ? "Updating..." : "Creating..."}
             </>
           ) : (
-            <>{job ? "Update Job" : "Create Job"}</>
+            <>{job ? "Update Job" : "Publish Job"}</>
           )}
         </Button>
       </div>

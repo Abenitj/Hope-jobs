@@ -1,15 +1,39 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo, useCallback, memo } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Send, Loader2 } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
+import { 
+  Send, 
+  Loader2, 
+  Paperclip, 
+  X, 
+  Image as ImageIcon, 
+  FileIcon,
+  Download,
+  ExternalLink,
+  Copy,
+  XCircle
+} from "lucide-react"
 import { useSocket } from "@/hooks/use-socket"
 import { formatDistanceToNow } from "date-fns"
 import { cn } from "@/lib/utils"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
 
 interface Message {
   id: string
@@ -49,7 +73,14 @@ export function ChatInterface({ currentUserId, initialChats }: ChatInterfaceProp
   const [newMessage, setNewMessage] = useState("")
   const [loading, setLoading] = useState(false)
   const [sending, setSending] = useState(false)
+  const [profileModalOpen, setProfileModalOpen] = useState(false)
+  const [imageModalUrl, setImageModalUrl] = useState<string | null>(null)
+  const [attachments, setAttachments] = useState<File[]>([])
+  const [uploading, setUploading] = useState(false)
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const { socket, isConnected } = useSocket()
 
   const selectedChat = chats.find((chat) => chat.id === selectedChatId)
@@ -91,7 +122,11 @@ export function ChatInterface({ currentUserId, initialChats }: ChatInterfaceProp
     }
   }, [socket, selectedChatId])
 
-  const loadMessages = async (chatId: string) => {
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [])
+
+  const loadMessages = useCallback(async (chatId: string) => {
     setLoading(true)
     try {
       const response = await fetch(`/api/chat/${chatId}/messages`)
@@ -105,23 +140,72 @@ export function ChatInterface({ currentUserId, initialChats }: ChatInterfaceProp
     } finally {
       setLoading(false)
     }
-  }
+  }, [scrollToBottom])
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!newMessage.trim() || !selectedChatId || sending) return
+    if ((!newMessage.trim() && attachments.length === 0) || !selectedChatId || sending) return
 
     setSending(true)
     const content = newMessage.trim()
     setNewMessage("")
+    const filesToUpload = [...attachments]
+    setAttachments([])
+
+    // Reset textarea height
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+    }
 
     try {
+      let messageContent = content
+
+      // Upload attachments if any
+      if (filesToUpload.length > 0) {
+        setUploading(true)
+        const uploadedUrls: string[] = []
+
+        for (const file of filesToUpload) {
+          try {
+            const formData = new FormData()
+            formData.append('file', file)
+
+            const uploadResponse = await fetch('/api/upload/chat-file', {
+              method: 'POST',
+              body: formData,
+            })
+
+            if (uploadResponse.ok) {
+              const { url } = await uploadResponse.json()
+              uploadedUrls.push(url)
+            } else {
+              const errorData = await uploadResponse.json()
+              console.error('Upload failed:', errorData)
+              throw new Error(errorData.error || 'Upload failed')
+            }
+          } catch (error) {
+            console.error('File upload error:', error)
+            setUploading(false)
+            setSending(false)
+            alert(`Failed to upload ${file.name}. Please try again.`)
+            return
+          }
+        }
+
+        setUploading(false)
+
+        // Append file URLs to message
+        if (uploadedUrls.length > 0) {
+          messageContent = content + '\n' + uploadedUrls.map(url => `[File: ${url}]`).join('\n')
+        }
+      }
+
       // Send via API
       const response = await fetch(`/api/chat/${selectedChatId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content: messageContent }),
       })
 
       if (response.ok) {
@@ -132,7 +216,7 @@ export function ChatInterface({ currentUserId, initialChats }: ChatInterfaceProp
         if (socket) {
           socket.emit("message:send", {
             chatId: selectedChatId,
-            content,
+            content: messageContent,
           })
         }
 
@@ -142,12 +226,217 @@ export function ChatInterface({ currentUserId, initialChats }: ChatInterfaceProp
       console.error("Failed to send message:", error)
     } finally {
       setSending(false)
+      setUploading(false)
     }
   }
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
+  // Auto-resize textarea as content grows
+  const handleTextareaChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setNewMessage(e.target.value)
+    const textarea = e.target
+    textarea.style.height = 'auto'
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 150)}px`
+  }, [])
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    if (files.length > 0) {
+      setAttachments(prev => [...prev, ...files])
+    }
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }, [])
+
+  const removeAttachment = useCallback((index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index))
+  }, [])
+
+  const getFileIcon = useCallback((file: File) => {
+    if (file.type.startsWith('image/')) {
+      return <ImageIcon className="h-4 w-4" />
+    }
+    return <FileIcon className="h-4 w-4" />
+  }, [])
+
+  const formatFileSize = useCallback((bytes: number) => {
+    if (bytes < 1024) return bytes + ' B'
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+  }, [])
+
+  const copyToClipboard = useCallback(async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(window.location.origin + url)
+      setCopiedUrl(url)
+      setTimeout(() => setCopiedUrl(null), 2000)
+    } catch (error) {
+      console.error('Failed to copy:', error)
+    }
+  }, [])
+
+  // Format last message preview for conversation list - Memoized
+  const formatLastMessage = useCallback((content: string) => {
+    const fileUrlRegex = /\[File: (\/uploads\/chat\/[^\]]+)\]/g
+    const match = fileUrlRegex.exec(content)
+    
+    if (match) {
+      const fileUrl = match[1]
+      const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(fileUrl)
+      
+      // Remove file URLs and get remaining text
+      const textOnly = content.replace(fileUrlRegex, '').trim()
+      
+      if (isImage) {
+        return textOnly ? `${textOnly} 📷` : '📷 Photo'
+      } else {
+        return textOnly ? `${textOnly} 📄` : '📄 Document'
+      }
+    }
+    
+    return content
+  }, [])
+
+  // Render message content with file URLs - Memoized
+  const renderMessageContent = useCallback((content: string, isOwnMessage: boolean) => {
+    // Check if message contains file URLs
+    const fileUrlRegex = /\[File: (\/uploads\/chat\/[^\]]+)\]/g
+    const matches = [...content.matchAll(fileUrlRegex)]
+
+    if (matches.length === 0) {
+      // Regular text message
+      return <p className="whitespace-pre-wrap break-words">{content}</p>
+    }
+
+    // Message with files
+    const parts: JSX.Element[] = []
+    let lastIndex = 0
+
+    matches.forEach((match, index) => {
+      const fullMatch = match[0]
+      const fileUrl = match[1]
+      const matchIndex = match.index!
+
+      // Add text before the file
+      if (matchIndex > lastIndex) {
+        const textBefore = content.substring(lastIndex, matchIndex)
+        if (textBefore.trim()) {
+          parts.push(
+            <div 
+              key={`text-${index}`} 
+              className={cn(
+                "rounded-xl p-3 mb-2",
+                isOwnMessage
+                  ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white"
+                  : "bg-slate-100 dark:bg-slate-800"
+              )}
+            >
+              <p className="whitespace-pre-wrap break-words">{textBefore}</p>
+            </div>
+          )
+        }
+      }
+
+      // Check if it's an image
+      const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(fileUrl)
+
+      if (isImage) {
+        parts.push(
+          <ContextMenu key={`file-${index}`}>
+            <ContextMenuTrigger>
+              <div className="my-1 group">
+                <div className="relative rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow">
+                  <img
+                    src={fileUrl}
+                    alt="Attached"
+                    className="max-w-xs w-full cursor-pointer transition-all"
+                    onClick={() => setImageModalUrl(fileUrl)}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
+                </div>
+              </div>
+            </ContextMenuTrigger>
+            <ContextMenuContent className="w-48">
+              <ContextMenuItem onClick={() => setImageModalUrl(fileUrl)}>
+                <ImageIcon className="mr-2 h-4 w-4" />
+                View Image
+              </ContextMenuItem>
+              <ContextMenuItem asChild>
+                <a href={fileUrl} download>
+                  <Download className="mr-2 h-4 w-4" />
+                  Download
+                </a>
+              </ContextMenuItem>
+              <ContextMenuItem onClick={() => copyToClipboard(fileUrl)}>
+                <Copy className="mr-2 h-4 w-4" />
+                {copiedUrl === fileUrl ? 'Copied!' : 'Copy Link'}
+              </ContextMenuItem>
+            </ContextMenuContent>
+          </ContextMenu>
+        )
+      } else {
+        const fileName = fileUrl.split('/').pop() || 'file'
+        parts.push(
+          <ContextMenu key={`file-${index}`}>
+            <ContextMenuTrigger>
+              <a
+                href={fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 bg-white dark:bg-slate-700 rounded-xl p-3 my-1 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors border border-slate-200 dark:border-slate-600 shadow-sm"
+              >
+                <div className="p-2 bg-amber-100 dark:bg-amber-900/20 rounded-lg">
+                  <FileIcon className="h-5 w-5 text-amber-600" />
+                </div>
+                <span className="text-sm font-medium text-foreground flex-1 truncate">
+                  {fileName}
+                </span>
+              </a>
+            </ContextMenuTrigger>
+            <ContextMenuContent className="w-48">
+              <ContextMenuItem asChild>
+                <a href={fileUrl} download>
+                  <Download className="mr-2 h-4 w-4" />
+                  Download
+                </a>
+              </ContextMenuItem>
+              <ContextMenuItem onClick={() => copyToClipboard(fileUrl)}>
+                <Copy className="mr-2 h-4 w-4" />
+                {copiedUrl === fileUrl ? 'Copied!' : 'Copy Link'}
+              </ContextMenuItem>
+            </ContextMenuContent>
+          </ContextMenu>
+        )
+      }
+
+      lastIndex = matchIndex + fullMatch.length
+    })
+
+    // Add any remaining text
+    if (lastIndex < content.length) {
+      const textAfter = content.substring(lastIndex)
+      if (textAfter.trim()) {
+        parts.push(
+          <div 
+            key="text-end" 
+            className={cn(
+              "rounded-xl p-3 mt-2",
+              isOwnMessage
+                ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white"
+                : "bg-slate-100 dark:bg-slate-800"
+            )}
+          >
+            <p className="whitespace-pre-wrap break-words">{textAfter}</p>
+          </div>
+        )
+      }
+    }
+
+    return <div className="space-y-1">{parts}</div>
+  }, [copiedUrl, copyToClipboard])
 
   return (
     <div className="grid grid-cols-12 gap-4 h-[calc(100vh-250px)]">
@@ -192,7 +481,7 @@ export function ChatInterface({ currentUserId, initialChats }: ChatInterfaceProp
                       </div>
                       {lastMessage && (
                         <p className="text-sm text-muted-foreground truncate">
-                          {lastMessage.content}
+                          {formatLastMessage(lastMessage.content)}
                         </p>
                       )}
                     </div>
@@ -210,7 +499,10 @@ export function ChatInterface({ currentUserId, initialChats }: ChatInterfaceProp
           <>
             {/* Chat Header */}
             <div className="p-4 border-b flex items-center gap-3">
-              <Avatar>
+              <Avatar 
+                className="cursor-pointer hover:ring-2 hover:ring-amber-500 transition-all"
+                onClick={() => setProfileModalOpen(true)}
+              >
                 <AvatarImage src={otherParticipant?.avatar || undefined} />
                 <AvatarFallback>
                   {otherParticipant?.name.slice(0, 2).toUpperCase()}
@@ -242,6 +534,7 @@ export function ChatInterface({ currentUserId, initialChats }: ChatInterfaceProp
                 <div className="space-y-4">
                   {messages.map((message) => {
                     const isOwnMessage = message.sender.id === currentUserId
+                    const hasFile = /\[File: \/uploads\/chat\/[^\]]+\]/g.test(message.content)
 
                     return (
                       <div
@@ -257,28 +550,50 @@ export function ChatInterface({ currentUserId, initialChats }: ChatInterfaceProp
                             {message.sender.name.slice(0, 2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        <div
-                          className={cn(
-                            "max-w-[70%] rounded-lg p-3",
-                            isOwnMessage
-                              ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white"
-                              : "bg-slate-100 dark:bg-slate-800"
-                          )}
-                        >
-                          <p className="text-sm">{message.content}</p>
-                          <p
+                        {hasFile ? (
+                          // File message - Telegram style
+                          <div className={cn("max-w-[70%]", isOwnMessage && "flex flex-col items-end")}>
+                            <div className="text-sm">
+                              {renderMessageContent(message.content, isOwnMessage)}
+                            </div>
+                            <p 
+                              className={cn(
+                                "text-xs mt-1",
+                                isOwnMessage ? "text-muted-foreground" : "text-muted-foreground"
+                              )}
+                            >
+                              {formatDistanceToNow(new Date(message.createdAt), {
+                                addSuffix: true,
+                              })}
+                            </p>
+                          </div>
+                        ) : (
+                          // Regular text message - Telegram style
+                          <div
                             className={cn(
-                              "text-xs mt-1",
+                              "max-w-[70%] rounded-2xl px-4 py-2 shadow-sm",
                               isOwnMessage
-                                ? "text-white/70"
-                                : "text-muted-foreground"
+                                ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-br-md"
+                                : "bg-white dark:bg-slate-800 text-foreground rounded-bl-md"
                             )}
                           >
-                            {formatDistanceToNow(new Date(message.createdAt), {
-                              addSuffix: true,
-                            })}
-                          </p>
-                        </div>
+                            <div className="text-sm leading-relaxed">
+                              {renderMessageContent(message.content, isOwnMessage)}
+                            </div>
+                            <p
+                              className={cn(
+                                "text-xs mt-1 text-right",
+                                isOwnMessage
+                                  ? "text-white/70"
+                                  : "text-muted-foreground"
+                              )}
+                            >
+                              {formatDistanceToNow(new Date(message.createdAt), {
+                                addSuffix: true,
+                              })}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     )
                   })}
@@ -289,20 +604,78 @@ export function ChatInterface({ currentUserId, initialChats }: ChatInterfaceProp
 
             {/* Message Input */}
             <form onSubmit={handleSendMessage} className="p-4 border-t">
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Type a message..."
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  disabled={sending}
-                />
-                <Button type="submit" size="icon" disabled={sending || !newMessage.trim()}>
-                  {sending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
-                </Button>
+              <div className="space-y-2">
+                {/* Attachments Preview */}
+                {attachments.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {attachments.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-lg px-3 py-2 text-sm"
+                      >
+                        {getFileIcon(file)}
+                        <span className="truncate max-w-[150px]">{file.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          ({formatFileSize(file.size)})
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeAttachment(index)}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Message Input */}
+                <div className="flex gap-2 items-end">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    className="hidden"
+                    onChange={handleFileSelect}
+                    accept="image/*,.pdf,.doc,.docx,.txt"
+                  />
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={sending || uploading}
+                  >
+                    <Paperclip className="h-4 w-4" />
+                  </Button>
+                  <Textarea
+                    ref={textareaRef}
+                    placeholder="Type a message..."
+                    value={newMessage}
+                    onChange={handleTextareaChange}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault()
+                        handleSendMessage(e)
+                      }
+                    }}
+                    disabled={sending || uploading}
+                    className="min-h-[40px] max-h-[150px] resize-none"
+                    rows={1}
+                  />
+                  <Button 
+                    type="submit" 
+                    size="icon" 
+                    disabled={sending || uploading || (!newMessage.trim() && attachments.length === 0)}
+                  >
+                    {sending || uploading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
               </div>
             </form>
           </>
@@ -312,6 +685,68 @@ export function ChatInterface({ currentUserId, initialChats }: ChatInterfaceProp
           </div>
         )}
       </Card>
+
+      {/* Profile Picture Modal - Telegram Style */}
+      <Dialog open={profileModalOpen} onOpenChange={setProfileModalOpen}>
+        <DialogContent className="max-w-2xl p-0 bg-black border-0">
+          <VisuallyHidden>
+            <DialogTitle>{otherParticipant?.name} - Profile Picture</DialogTitle>
+          </VisuallyHidden>
+          <div className="relative bg-black">
+            {otherParticipant?.avatar ? (
+              <img 
+                src={otherParticipant.avatar}
+                alt={otherParticipant.name}
+                className="w-full h-auto object-contain"
+              />
+            ) : (
+              <div className="w-full aspect-square bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500 flex items-center justify-center">
+                <span className="text-9xl font-bold text-white drop-shadow-lg">
+                  {otherParticipant?.name.slice(0, 2).toUpperCase()}
+                </span>
+              </div>
+            )}
+            {/* Name overlay - Telegram style */}
+            <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/60 to-transparent p-4">
+              <h2 className="text-lg font-semibold text-white drop-shadow-lg">
+                {otherParticipant?.name}
+              </h2>
+              <p className="text-white/80 text-sm capitalize">
+                {otherParticipant?.role}
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Image Viewer Modal - Telegram Style */}
+      <Dialog open={!!imageModalUrl} onOpenChange={() => setImageModalUrl(null)}>
+        <DialogContent className="max-w-7xl w-auto h-auto p-0 bg-transparent border-0 [&>button]:hidden">
+          <VisuallyHidden>
+            <DialogTitle>Image Viewer</DialogTitle>
+          </VisuallyHidden>
+          <div className="relative">
+            {imageModalUrl && (
+              <>
+                <img 
+                  src={imageModalUrl}
+                  alt="Full size"
+                  className="max-w-[90vw] max-h-[90vh] w-auto h-auto object-contain rounded-lg"
+                  loading="lazy"
+                />
+                {/* Close button - Enhanced Glassmorphism */}
+                <button
+                  onClick={() => setImageModalUrl(null)}
+                  className="absolute top-4 right-4 p-2.5 rounded-full bg-white/5 backdrop-blur-xl border border-white/20 hover:bg-white/15 text-white shadow-2xl transition-all hover:scale-110 active:scale-95 z-10"
+                  aria-label="Close"
+                >
+                  <X className="h-6 w-6 stroke-[2.5] drop-shadow-lg" />
+                </button>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

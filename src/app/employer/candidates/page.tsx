@@ -27,8 +27,8 @@ async function searchCandidates(params: SearchParams) {
   if (search) {
     conditions.push({
       OR: [
-        { name: { contains: search, mode: "insensitive" } },
-        { email: { contains: search, mode: "insensitive" } },
+        { name: { contains: search } },
+        { email: { contains: search } },
       ],
     })
   }
