@@ -4,7 +4,7 @@ import { NextResponse } from "next/server"
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { jobId: string } }
+  { params }: { params: Promise<{ jobId: string }> }
 ) {
   try {
     const session = await auth()
@@ -16,8 +16,10 @@ export async function PATCH(
       )
     }
 
+    const { jobId } = await params
+
     const job = await db.job.findUnique({
-      where: { id: params.jobId },
+      where: { id: jobId },
     })
 
     if (!job) {
@@ -37,7 +39,7 @@ export async function PATCH(
     const body = await req.json()
 
     const updatedJob = await db.job.update({
-      where: { id: params.jobId },
+      where: { id: jobId },
       data: {
         ...body,
         postedAt: body.postedAt ? new Date(body.postedAt) : job.postedAt,
@@ -56,7 +58,7 @@ export async function PATCH(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { jobId: string } }
+  { params }: { params: Promise<{ jobId: string }> }
 ) {
   try {
     const session = await auth()
@@ -68,8 +70,10 @@ export async function DELETE(
       )
     }
 
+    const { jobId } = await params
+
     const job = await db.job.findUnique({
-      where: { id: params.jobId },
+      where: { id: jobId },
     })
 
     if (!job) {
@@ -87,7 +91,7 @@ export async function DELETE(
     }
 
     await db.job.delete({
-      where: { id: params.jobId },
+      where: { id: jobId },
     })
 
     return NextResponse.json({ success: true })

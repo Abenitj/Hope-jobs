@@ -81,10 +81,11 @@ async function getApplications(userId: string, params: SearchParams) {
 export default async function EmployerApplicationsPage({
   searchParams,
 }: {
-  searchParams: SearchParams
+  searchParams: Promise<SearchParams>
 }) {
   const session = await auth()
-  const { applications, stats } = await getApplications(session!.user.id, searchParams)
+  const params = await searchParams
+  const { applications, stats } = await getApplications(session!.user.id, params)
 
   const kpiCards = [
     {

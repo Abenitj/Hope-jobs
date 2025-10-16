@@ -15,8 +15,8 @@ import { NotificationPanel } from "@/components/notifications/notification-panel
 
 interface AdminHeaderProps {
   user: {
-    name: string
-    email: string
+    name?: string | null
+    email?: string | null
     avatar?: string | null
   }
   title: string

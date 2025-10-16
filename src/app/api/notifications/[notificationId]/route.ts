@@ -4,7 +4,7 @@ import { NextResponse } from "next/server"
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { notificationId: string } }
+  { params }: { params: Promise<{ notificationId: string }> }
 ) {
   try {
     const session = await auth()
@@ -16,8 +16,10 @@ export async function PATCH(
       )
     }
 
+    const { notificationId } = await params
+
     const notification = await db.notification.findUnique({
-      where: { id: params.notificationId },
+      where: { id: notificationId },
     })
 
     if (!notification) {
@@ -37,7 +39,7 @@ export async function PATCH(
     const body = await req.json()
 
     const updatedNotification = await db.notification.update({
-      where: { id: params.notificationId },
+      where: { id: notificationId },
       data: { read: body.read ?? true },
     })
 
@@ -53,7 +55,7 @@ export async function PATCH(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { notificationId: string } }
+  { params }: { params: Promise<{ notificationId: string }> }
 ) {
   try {
     const session = await auth()
@@ -65,8 +67,10 @@ export async function DELETE(
       )
     }
 
+    const { notificationId } = await params
+
     const notification = await db.notification.findUnique({
-      where: { id: params.notificationId },
+      where: { id: notificationId },
     })
 
     if (!notification) {
@@ -84,7 +88,7 @@ export async function DELETE(
     }
 
     await db.notification.delete({
-      where: { id: params.notificationId },
+      where: { id: notificationId },
     })
 
     return NextResponse.json({ success: true })

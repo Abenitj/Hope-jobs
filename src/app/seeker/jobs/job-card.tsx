@@ -15,7 +15,7 @@ interface JobCardProps {
     type: string
     location: string | null
     salary: string | null
-    postedAt: Date
+    postedAt: Date | null
     hasApplied: boolean
     employer: {
       name: string
@@ -69,7 +69,7 @@ export function JobCard({ job }: JobCardProps) {
                 )}
                 <span className="text-sm text-muted-foreground flex items-center gap-1">
                   <Clock className="h-3.5 w-3.5" />
-                  {formatDistanceToNow(job.postedAt, { addSuffix: true })}
+                  {job.postedAt ? formatDistanceToNow(job.postedAt, { addSuffix: true }) : 'Draft'}
                 </span>
               </div>
 

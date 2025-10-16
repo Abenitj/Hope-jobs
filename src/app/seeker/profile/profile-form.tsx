@@ -32,7 +32,7 @@ interface ProfileFormProps {
     skills: string | null
     experience: string | null
     education: string | null
-    resume: string | null
+    resumeUrl: string | null
     availability: string
   } | null
 }

@@ -4,7 +4,7 @@ import { NextResponse } from "next/server"
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { jobId: string } }
+  { params }: { params: Promise<{ jobId: string }> }
 ) {
   try {
     const session = await auth()
@@ -16,8 +16,10 @@ export async function DELETE(
       )
     }
 
+    const { jobId } = await params
+
     const job = await db.job.findUnique({
-      where: { id: params.jobId },
+      where: { id: jobId },
     })
 
     if (!job) {
@@ -28,7 +30,7 @@ export async function DELETE(
     }
 
     await db.job.delete({
-      where: { id: params.jobId },
+      where: { id: jobId },
     })
 
     return NextResponse.json({ success: true })

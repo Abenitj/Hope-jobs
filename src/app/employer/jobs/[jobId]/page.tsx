@@ -57,16 +57,17 @@ async function getJobApplications(jobId: string) {
 export default async function JobDetailsPage({
   params,
 }: {
-  params: { jobId: string }
+  params: Promise<{ jobId: string }>
 }) {
   const session = await auth()
-  const job = await getJobDetails(params.jobId, session!.user.id)
+  const { jobId } = await params
+  const job = await getJobDetails(jobId, session!.user.id)
 
   if (!job) {
     notFound()
   }
 
-  const applications = await getJobApplications(params.jobId)
+  const applications = await getJobApplications(jobId)
 
   return (
     <div className="space-y-6">
@@ -294,7 +295,7 @@ export default async function JobDetailsPage({
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Posted</span>
                 <span className="text-sm font-medium">
-                  {formatDistanceToNow(job.postedAt, { addSuffix: true })}
+                  {job.postedAt ? formatDistanceToNow(job.postedAt, { addSuffix: true }) : 'Draft'}
                 </span>
               </div>
               <div className="flex items-center justify-between">

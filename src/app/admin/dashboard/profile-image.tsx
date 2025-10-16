@@ -10,7 +10,7 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 
 interface ProfileImageProps {
   name: string
-  avatar: string | null
+  avatar: string | null | undefined
 }
 
 export function ProfileImage({ name, avatar }: ProfileImageProps) {

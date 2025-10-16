@@ -79,10 +79,11 @@ async function searchJobs(params: SearchParams, userId: string) {
 export default async function BrowseJobsPage({
   searchParams,
 }: {
-  searchParams: SearchParams
+  searchParams: Promise<SearchParams>
 }) {
   const session = await auth()
-  const jobs = await searchJobs(searchParams, session!.user.id)
+  const params = await searchParams
+  const jobs = await searchJobs(params, session!.user.id)
 
   return (
     <div className="space-y-6">

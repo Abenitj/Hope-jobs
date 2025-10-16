@@ -65,10 +65,11 @@ async function getJobDetails(jobId: string, userId: string) {
 export default async function JobDetailsPage({
   params,
 }: {
-  params: { jobId: string }
+  params: Promise<{ jobId: string }>
 }) {
   const session = await auth()
-  const job = await getJobDetails(params.jobId, session!.user.id)
+  const { jobId } = await params
+  const job = await getJobDetails(jobId, session!.user.id)
 
   if (!job) {
     notFound()
@@ -205,7 +206,7 @@ export default async function JobDetailsPage({
                     )}
                     <span className="text-sm text-muted-foreground flex items-center gap-1">
                       <Clock className="h-3.5 w-3.5" />
-                      Posted {formatDistanceToNow(job.postedAt, { addSuffix: true })}
+                      {job.postedAt ? `Posted ${formatDistanceToNow(job.postedAt, { addSuffix: true })}` : 'Draft'}
                     </span>
                   </div>
                 </div>
@@ -353,7 +354,7 @@ export default async function JobDetailsPage({
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Posted:</span>
                 <span className="font-medium">
-                  {format(new Date(job.postedAt), "MMM d, yyyy")}
+                  {job.postedAt ? format(new Date(job.postedAt), "MMM d, yyyy") : 'Not posted yet'}
                 </span>
               </div>
               <div className="flex justify-between">

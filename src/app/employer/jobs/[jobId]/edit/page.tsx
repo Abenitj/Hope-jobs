@@ -21,10 +21,11 @@ async function getJob(jobId: string, userId: string) {
 export default async function EditJobPage({
   params,
 }: {
-  params: { jobId: string }
+  params: Promise<{ jobId: string }>
 }) {
   const session = await auth()
-  const job = await getJob(params.jobId, session!.user.id)
+  const { jobId } = await params
+  const job = await getJob(jobId, session!.user.id)
 
   if (!job) {
     notFound()

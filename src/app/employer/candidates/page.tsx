@@ -95,10 +95,11 @@ async function searchCandidates(params: SearchParams) {
 export default async function CandidatesPage({
   searchParams,
 }: {
-  searchParams: SearchParams
+  searchParams: Promise<SearchParams>
 }) {
   const session = await auth()
-  const { candidates, stats } = await searchCandidates(searchParams)
+  const params = await searchParams
+  const { candidates, stats } = await searchCandidates(params)
 
   const kpiCards = [
     {

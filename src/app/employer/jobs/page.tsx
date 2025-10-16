@@ -86,10 +86,11 @@ async function getEmployerJobs(userId: string, params: SearchParams) {
 export default async function EmployerJobsPage({
   searchParams,
 }: {
-  searchParams: SearchParams
+  searchParams: Promise<SearchParams>
 }) {
   const session = await auth()
-  const { jobs, stats } = await getEmployerJobs(session!.user.id, searchParams)
+  const params = await searchParams
+  const { jobs, stats } = await getEmployerJobs(session!.user.id, params)
 
   const kpiCards = [
     {
@@ -251,7 +252,7 @@ export default async function EmployerJobsPage({
                       )}
                       <span className="text-sm text-muted-foreground flex items-center gap-1">
                         <Clock className="h-4 w-4" />
-                        Posted {formatDistanceToNow(job.postedAt, { addSuffix: true })}
+                        {job.postedAt ? `Posted ${formatDistanceToNow(job.postedAt, { addSuffix: true })}` : 'Draft'}
                       </span>
                       <span className="text-sm font-medium text-blue-600 flex items-center gap-1">
                         <Users className="h-4 w-4" />

@@ -5,7 +5,7 @@ import { emitToChat } from "@/lib/socket"
 
 export async function GET(
   req: Request,
-  { params }: { params: { chatId: string } }
+  { params }: { params: Promise<{ chatId: string }> }
 ) {
   try {
     const session = await auth()
@@ -14,7 +14,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { chatId } = params
+    const { chatId } = await params
 
     // Verify user is a participant
     const chat = await db.chat.findFirst({
@@ -65,7 +65,7 @@ export async function GET(
 
 export async function POST(
   req: Request,
-  { params }: { params: { chatId: string } }
+  { params }: { params: Promise<{ chatId: string }> }
 ) {
   try {
     const session = await auth()
@@ -74,7 +74,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { chatId } = params
+    const { chatId } = await params
     const { content } = await req.json()
 
     if (!content || !content.trim()) {

@@ -72,14 +72,15 @@ async function getCandidateProfile(candidateId: string) {
 export default async function CandidateProfilePage({
   params,
 }: {
-  params: { candidateId: string }
+  params: Promise<{ candidateId: string }>
 }) {
   const session = await auth()
   if (!session?.user || session.user.role !== "EMPLOYER") {
     redirect("/auth/signin")
   }
 
-  const candidate = await getCandidateProfile(params.candidateId)
+  const { candidateId } = await params
+  const candidate = await getCandidateProfile(candidateId)
 
   if (!candidate) {
     notFound()

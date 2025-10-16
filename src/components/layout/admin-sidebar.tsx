@@ -10,7 +10,8 @@ import {
   BarChart3,
   UserCircle,
   LogOut,
-  Menu
+  Menu,
+  Settings
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -19,8 +20,8 @@ import { useState } from "react"
 
 interface AdminSidebarProps {
   user: {
-    name: string
-    email: string
+    name?: string | null
+    email?: string | null
     avatar?: string | null
   }
 }
@@ -30,6 +31,7 @@ const navigation = [
   { name: "Users", href: "/admin/users", icon: Users },
   { name: "Jobs", href: "/admin/jobs", icon: Briefcase },
   { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
+  { name: "SMTP Settings", href: "/admin/smtp", icon: Settings },
   { name: "Profile", href: "/admin/profile", icon: UserCircle },
 ]
 

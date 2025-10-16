@@ -99,13 +99,14 @@ async function createOrGetChat(currentUserId: string, otherUserId: string) {
 export default async function MessagesPage({
   searchParams,
 }: {
-  searchParams: { user?: string }
+  searchParams: Promise<{ user?: string }>
 }) {
   const session = await auth()
+  const params = await searchParams
   
   // If user parameter is provided, create or get chat and redirect
-  if (searchParams.user) {
-    const chatId = await createOrGetChat(session!.user.id, searchParams.user)
+  if (params.user) {
+    const chatId = await createOrGetChat(session!.user.id, params.user)
     redirect(`/employer/messages?chat=${chatId}`)
   }
 

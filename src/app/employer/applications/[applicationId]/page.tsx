@@ -81,14 +81,15 @@ async function getApplicationDetails(applicationId: string, employerId: string) 
 export default async function ApplicationDetailsPage({
   params,
 }: {
-  params: { applicationId: string }
+  params: Promise<{ applicationId: string }>
 }) {
   const session = await auth()
   if (!session?.user || session.user.role !== "EMPLOYER") {
     redirect("/auth/signin")
   }
 
-  const application = await getApplicationDetails(params.applicationId, session.user.id)
+  const { applicationId } = await params
+  const application = await getApplicationDetails(applicationId, session.user.id)
 
   if (!application) {
     notFound()

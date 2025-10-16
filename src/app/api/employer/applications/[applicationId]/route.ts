@@ -5,7 +5,7 @@ import { createNotification } from "@/lib/notifications"
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { applicationId: string } }
+  { params }: { params: Promise<{ applicationId: string }> }
 ) {
   try {
     const session = await auth()
@@ -17,6 +17,7 @@ export async function PATCH(
       )
     }
 
+    const { applicationId } = await params
     const { status } = await req.json()
 
     if (!status) {
@@ -46,7 +47,7 @@ export async function PATCH(
 
     // Get the application with job details to verify ownership
     const application = await db.application.findUnique({
-      where: { id: params.applicationId },
+      where: { id: applicationId },
       include: {
         job: {
           select: {
@@ -80,7 +81,7 @@ export async function PATCH(
 
     // Update the application status
     const updatedApplication = await db.application.update({
-      where: { id: params.applicationId },
+      where: { id: applicationId },
       data: { status },
     })
 
@@ -99,11 +100,7 @@ export async function PATCH(
       userId: application.seeker.id,
       title: "Application Status Update",
       message: statusMessages[status] || `Your application status has been updated to ${status}`,
-      type: status === "OFFERED" || status === "SHORTLISTED" || status === "INTERVIEWED" 
-        ? "success" 
-        : status === "REJECTED" 
-        ? "error" 
-        : "info",
+      type: "APPLICATION",
     })
 
     return NextResponse.json({

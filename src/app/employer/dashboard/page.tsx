@@ -259,7 +259,7 @@ export default async function EmployerDashboard() {
                         {job._count.applications} applications
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Posted {formatDistanceToNow(job.postedAt, { addSuffix: true })}
+                        {job.postedAt ? `Posted ${formatDistanceToNow(job.postedAt, { addSuffix: true })}` : 'Draft'}
                       </p>
                     </div>
                     <Button variant="ghost" size="sm" asChild>

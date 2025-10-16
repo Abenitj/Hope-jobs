@@ -310,7 +310,7 @@ export function ChatInterface({ currentUserId, initialChats }: ChatInterfaceProp
     }
 
     // Message with files
-    const parts: JSX.Element[] = []
+    const parts: React.ReactElement[] = []
     let lastIndex = 0
 
     matches.forEach((match, index) => {
