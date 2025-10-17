@@ -1,7 +1,19 @@
 import { LoginForm } from "./login-form"
 import Link from "next/link"
+import { auth } from "@/lib/auth"
+import { redirect } from "next/navigation"
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const session = await auth()
+  
+  // Redirect logged-in users to their dashboard
+  if (session?.user) {
+    const role = session.user.role
+    if (role === "ADMIN") redirect("/admin/dashboard")
+    if (role === "EMPLOYER") redirect("/employer/dashboard")
+    if (role === "SEEKER") redirect("/seeker/dashboard")
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/5 to-transparent">
       <div className="w-full max-w-md p-8">

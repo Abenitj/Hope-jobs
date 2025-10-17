@@ -3,7 +3,7 @@ import { db } from "@/lib/db"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Briefcase, Plus, MapPin, DollarSign, Clock, Eye, Users, Edit, Trash2, MoreHorizontal } from "lucide-react"
+import { Briefcase, Plus, MapPin, Banknote, Clock, Eye, Users, Edit, Trash2, MoreHorizontal } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -246,7 +246,7 @@ export default async function EmployerJobsPage({
                       )}
                       {job.salary && (
                         <span className="text-sm text-muted-foreground flex items-center gap-1">
-                          <DollarSign className="h-4 w-4" />
+                          <Banknote className="h-4 w-4" />
                           {job.salary}
                         </span>
                       )}

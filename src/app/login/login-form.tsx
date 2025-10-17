@@ -123,15 +123,6 @@ export function LoginForm() {
             )}
           </Button>
         </form>
-
-        <div className="mt-6 p-4 bg-muted rounded-lg">
-          <p className="text-xs font-semibold mb-2">Demo Accounts:</p>
-          <div className="space-y-1 text-xs">
-            <p><strong>Admin:</strong> admin@hopejobs.com / Admin@123</p>
-            <p><strong>Employer:</strong> employer@company.com / Employer@123</p>
-            <p><strong>Seeker:</strong> seeker@example.com / Seeker@123</p>
-          </div>
-        </div>
       </CardContent>
     </Card>
   )

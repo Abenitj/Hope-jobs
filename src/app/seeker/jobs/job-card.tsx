@@ -4,7 +4,7 @@ import Link from "next/link"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Briefcase, MapPin, DollarSign, Clock, CheckCircle } from "lucide-react"
+import { Briefcase, MapPin, Clock, CheckCircle, Banknote } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 
 interface JobCardProps {
@@ -63,7 +63,7 @@ export function JobCard({ job }: JobCardProps) {
                 )}
                 {job.salary && (
                   <span className="text-sm text-muted-foreground flex items-center gap-1">
-                    <DollarSign className="h-3.5 w-3.5" />
+                    <Banknote className="h-3.5 w-3.5" />
                     {job.salary}
                   </span>
                 )}

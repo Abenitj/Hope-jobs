@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator"
 import { 
   Briefcase, 
   MapPin, 
-  DollarSign, 
+  Banknote, 
   Clock, 
   Calendar, 
   Building2, 
@@ -148,7 +148,7 @@ export default async function JobDetailsPage({
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
                 <div className="p-3 rounded-lg bg-amber-100 dark:bg-amber-900/20">
-                  <DollarSign className="h-5 w-5 text-amber-600" />
+                  <Banknote className="h-5 w-5 text-amber-600" />
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Salary</p>

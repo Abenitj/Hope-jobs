@@ -176,7 +176,7 @@ export function JobForm({ job }: JobFormProps) {
               <Label htmlFor="salary">Salary Range (Optional)</Label>
               <Input
                 id="salary"
-                placeholder="e.g., $50,000 - $70,000"
+                placeholder="e.g., ETB 50,000 - ETB 70,000"
                 value={formData.salary}
                 onChange={(e) =>
                   setFormData({ ...formData, salary: e.target.value })

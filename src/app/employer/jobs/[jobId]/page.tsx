@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Briefcase, MapPin, DollarSign, Clock, Users, Edit, Eye, ArrowLeft, CheckCircle, FileText } from "lucide-react"
+import { Briefcase, MapPin, Banknote, Clock, Users, Edit, Eye, ArrowLeft, CheckCircle, FileText } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import Link from "next/link"
 
@@ -137,7 +137,7 @@ export default async function JobDetailsPage({
             <CardContent className="pt-6">
               <div className="flex flex-col items-center text-center">
                 <div className="p-3 rounded-lg bg-green-100 dark:bg-green-900/20 mb-3">
-                  <DollarSign className="h-6 w-6 text-green-600" />
+                  <Banknote className="h-6 w-6 text-green-600" />
                 </div>
                 <p className="text-sm font-medium text-muted-foreground">Salary</p>
                 <p className="text-lg font-bold mt-1">{job.salary}</p>
