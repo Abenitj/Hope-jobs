@@ -29,7 +29,6 @@ export function LoginForm() {
         email: formData.email.trim(),
         password: formData.password,
         redirect: false,
-        callbackUrl: "/admin/dashboard"
       })
 
       if (result?.error) {
@@ -38,15 +37,17 @@ export function LoginForm() {
           description: result.error,
           variant: "destructive",
         })
-      } else {
-        // Force redirect to role-specific dashboard
+      } else if (result?.ok) {
+        // Success - redirect to home which will redirect to dashboard
         toast({
           title: "Success",
           description: "Login successful! Redirecting...",
         })
         
-        // Redirect will be handled by middleware
-        window.location.href = "/"
+        // Use router.push with full page reload
+        setTimeout(() => {
+          window.location.href = "/"
+        }, 500)
       }
     } catch (error) {
       toast({
