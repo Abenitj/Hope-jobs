@@ -15,7 +15,7 @@ model User {
   name          String
   role          String       // ADMIN, EMPLOYER, SEEKER
   status        String       @default("ACTIVE") // ACTIVE, SUSPENDED, DELETED
-  avatar        String?
+  avatar        String?      @db.LongText
   emailVerified DateTime?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
