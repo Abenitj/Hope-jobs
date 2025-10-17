@@ -30,7 +30,18 @@ export default auth((req) => {
     }
   }
 
-  // Allow public routes
+  // Redirect logged-in users from home to their dashboard
+  if (nextUrl.pathname === "/" && isLoggedIn) {
+    if (userRole === "ADMIN") {
+      return NextResponse.redirect(new URL("/admin/dashboard", nextUrl))
+    } else if (userRole === "EMPLOYER") {
+      return NextResponse.redirect(new URL("/employer/dashboard", nextUrl))
+    } else if (userRole === "SEEKER") {
+      return NextResponse.redirect(new URL("/seeker/dashboard", nextUrl))
+    }
+  }
+
+  // Allow public routes for non-logged-in users
   if (isPublicRoute && !isLoggedIn) {
     return NextResponse.next()
   }

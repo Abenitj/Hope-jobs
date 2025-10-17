@@ -26,9 +26,10 @@ export function LoginForm() {
 
     try {
       const result = await signIn("credentials", {
-        email: formData.email,
+        email: formData.email.trim(),
         password: formData.password,
         redirect: false,
+        callbackUrl: "/admin/dashboard"
       })
 
       if (result?.error) {
@@ -38,9 +39,14 @@ export function LoginForm() {
           variant: "destructive",
         })
       } else {
-        // Redirect will be handled by middleware based on role
-        router.push("/")
-        router.refresh()
+        // Force redirect to role-specific dashboard
+        toast({
+          title: "Success",
+          description: "Login successful! Redirecting...",
+        })
+        
+        // Redirect will be handled by middleware
+        window.location.href = "/"
       }
     } catch (error) {
       toast({
