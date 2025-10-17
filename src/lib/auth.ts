@@ -74,6 +74,28 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return session
     },
+    async authorized({ auth, request }) {
+      const url = request.nextUrl
+      const path = url.pathname
+      const isLoggedIn = !!auth?.user
+      const role = auth?.user?.role
+
+      // Public routes
+      if (path === "/" || path === "/login" || path === "/register" || 
+          path === "/forgot-password" || path.startsWith("/reset-password")) {
+        return true
+      }
+
+      // Require login for protected routes
+      if (!isLoggedIn) return false
+
+      // Role-based access
+      if (path.startsWith("/admin")) return role === "ADMIN"
+      if (path.startsWith("/employer")) return role === "EMPLOYER"
+      if (path.startsWith("/seeker")) return role === "SEEKER"
+
+      return true
+    },
   },
 })
 
