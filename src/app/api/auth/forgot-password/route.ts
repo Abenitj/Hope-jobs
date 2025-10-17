@@ -62,7 +62,15 @@ export async function POST(request: NextRequest) {
     })
 
     // Create password reset URL
-    const resetUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/reset-password?token=${token}`
+    const baseUrl = process.env.NEXTAUTH_URL
+    if (!baseUrl) {
+      console.error('❌ NEXTAUTH_URL not set in environment variables')
+      return NextResponse.json(
+        { error: "Server configuration error. Please contact support." },
+        { status: 500 }
+      )
+    }
+    const resetUrl = `${baseUrl}/reset-password?token=${token}`
 
     console.log(`📧 Sending password reset email to: ${user.email}`)
 

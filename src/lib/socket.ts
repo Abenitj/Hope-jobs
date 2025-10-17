@@ -23,9 +23,13 @@ export const initSocketServer = (httpServer: HTTPServer) => {
     return io
   }
 
+  const allowedOrigins = process.env.NEXTAUTH_URL 
+    ? [process.env.NEXTAUTH_URL, "http://localhost:3000"] 
+    : ["http://localhost:3000"]
+
   io = new SocketIOServer<ClientToServerEvents, ServerToClientEvents>(httpServer, {
     cors: {
-      origin: process.env.NEXTAUTH_URL || "http://localhost:3000",
+      origin: allowedOrigins,
       methods: ["GET", "POST"],
       credentials: true,
     },
