@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { NextResponse } from "next/server"
 import { emitToChat } from "@/lib/socket"
+import { createNotification } from "@/lib/notifications"
 
 export async function GET(
   req: Request,
@@ -118,11 +119,52 @@ export async function POST(
       },
     })
 
-    // Update chat's updatedAt
+    // Update chat's updatedAt and lastMessage
     await db.chat.update({
       where: { id: chatId },
-      data: { updatedAt: new Date() },
+      data: { 
+        updatedAt: new Date(),
+        lastMessage: content.trim().substring(0, 100),
+        lastMessageAt: new Date()
+      },
     })
+
+    // Get other participants to send them notifications
+    const otherParticipants = await db.chatParticipant.findMany({
+      where: {
+        chatId,
+        userId: { not: session.user.id }
+      },
+      include: {
+        user: true
+      }
+    })
+
+    // Create notifications for other participants
+    for (const participant of otherParticipants) {
+      try {
+        // Determine the correct messages link based on user role
+        let messagesLink = "/messages"
+        if (participant.user.role === "ADMIN") {
+          messagesLink = "/admin/messages"
+        } else if (participant.user.role === "EMPLOYER") {
+          messagesLink = "/employer/messages"
+        } else if (participant.user.role === "SEEKER") {
+          messagesLink = "/seeker/messages"
+        }
+
+        await createNotification({
+          userId: participant.userId,
+          type: "MESSAGE",
+          title: `New message from ${message.sender.name}`,
+          message: content.trim().substring(0, 100),
+          link: `${messagesLink}?chat=${chatId}`,
+        })
+      } catch (notifError) {
+        console.error("Failed to create notification:", notifError)
+        // Continue even if notification fails
+      }
+    }
 
     // Transform to use createdAt for consistency with frontend
     const transformedMessage = {

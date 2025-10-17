@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { Bell, Check, Trash2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -25,11 +25,32 @@ interface Notification {
 
 export function NotificationPanel() {
   const [notifications, setNotifications] = useState<Notification[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-  const unreadCount = notifications.filter((n) => !n.read).length
+  // Fetch unread count quickly on mount and periodically
+  const fetchUnreadCount = useCallback(async () => {
+    try {
+      const response = await fetch("/api/notifications/unread-count", {
+        cache: "no-store"
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setUnreadCount(data.count)
+      }
+    } catch (error) {
+      console.error("Failed to fetch unread count:", error)
+    }
+  }, [])
+
+  // Poll for new notifications every 30 seconds
+  useEffect(() => {
+    fetchUnreadCount()
+    const interval = setInterval(fetchUnreadCount, 30000)
+    return () => clearInterval(interval)
+  }, [fetchUnreadCount])
 
   useEffect(() => {
     if (open) {
@@ -39,10 +60,14 @@ export function NotificationPanel() {
 
   const fetchNotifications = async () => {
     try {
-      const response = await fetch("/api/notifications")
+      const response = await fetch("/api/notifications", {
+        cache: "no-store"
+      })
       if (response.ok) {
         const data = await response.json()
         setNotifications(data)
+        // Update unread count from full data
+        setUnreadCount(data.filter((n: Notification) => !n.read).length)
       }
     } catch (error) {
       console.error("Failed to fetch notifications:", error)
@@ -63,6 +88,8 @@ export function NotificationPanel() {
             n.id === notificationId ? { ...n, read: true } : n
           )
         )
+        // Update unread count
+        setUnreadCount(prev => Math.max(0, prev - 1))
       }
     } catch (error) {
       console.error("Failed to mark as read:", error)
@@ -76,7 +103,12 @@ export function NotificationPanel() {
       })
 
       if (response.ok) {
+        const deletedNotification = notifications.find(n => n.id === notificationId)
         setNotifications(notifications.filter((n) => n.id !== notificationId))
+        // Update unread count if deleted notification was unread
+        if (deletedNotification && !deletedNotification.read) {
+          setUnreadCount(prev => Math.max(0, prev - 1))
+        }
       }
     } catch (error) {
       console.error("Failed to delete notification:", error)
@@ -92,6 +124,7 @@ export function NotificationPanel() {
 
       if (response.ok) {
         setNotifications(notifications.map((n) => ({ ...n, read: true })))
+        setUnreadCount(0)
       }
     } catch (error) {
       console.error("Failed to mark all as read:", error)
@@ -131,7 +164,11 @@ export function NotificationPanel() {
         <Button variant="ghost" size="icon" className="relative h-9 w-9">
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
-            <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full" />
+            <Badge 
+              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-500 hover:bg-red-600 text-white text-xs"
+            >
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </Badge>
           )}
         </Button>
       </DropdownMenuTrigger>

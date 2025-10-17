@@ -13,13 +13,28 @@ export async function GET(req: Request) {
       )
     }
 
+    // Get notifications with limit for better performance
     const notifications = await db.notification.findMany({
       where: { userId: session.user.id },
       orderBy: { createdAt: "desc" },
-      take: 20,
+      take: 50, // Increased limit
+      select: {
+        id: true,
+        type: true,
+        title: true,
+        message: true,
+        link: true,
+        read: true,
+        createdAt: true,
+        // Don't fetch data field for better performance
+      }
     })
 
-    return NextResponse.json(notifications)
+    return NextResponse.json(notifications, {
+      headers: {
+        'Cache-Control': 'no-store, must-revalidate',
+      }
+    })
   } catch (error) {
     console.error("[NOTIFICATIONS_GET]", error)
     return NextResponse.json(
