@@ -1,201 +1,135 @@
-# 💾 Database Setup - SQLite vs MySQL
+# 💾 Database Setup - Online MySQL
 
-## ✅ **NOW USING SQLITE (LOCAL)**
+## ✅ **NOW USING ONLINE MYSQL**
 
-Your app is now configured to use SQLite for local development.
-
-**Benefits:**
-- ⚡ Super fast (no network latency)
-- 🔧 No connection issues
-- 💾 Data stored in `prisma/dev.db`
-- 🎯 Perfect for development
-- 🚀 Instant queries
+Your app is configured to use an online MySQL database hosted at `sql.freedb.tech`.
 
 ---
 
-## 🔄 **Current Configuration:**
+## 🌐 **Current Configuration:**
 
-### **Local Development (.env):**
+### **Database Provider:**
+```
+MySQL (Online)
+Host: sql.freedb.tech:3306
+Database: freedb_hope-jobs
+```
+
+### **Environment Variables (.env):**
 ```env
-DATABASE_URL="file:./prisma/dev.db"
+DATABASE_URL="mysql://freedb_abenitj:RQ@tY5Q4nK3cfw*@sql.freedb.tech:3306/freedb_hope-jobs?connection_limit=5&pool_timeout=20&connect_timeout=10"
 ```
 
 ### **Prisma Schema:**
 ```prisma
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 ```
 
-### **Database File:**
+---
+
+## 🎯 **Benefits of Online MySQL:**
+
+✅ **Same database for local & production**
+   - No need to sync data between environments
+   - Test with real production data structure
+
+✅ **Access from anywhere**
+   - Develop on any machine
+   - Team members can share the same database
+
+✅ **Easy deployment**
+   - Just set DATABASE_URL in production
+   - No database migration needed
+
+---
+
+## 🔑 **Login Credentials:**
+
 ```
-prisma/dev.db  (SQLite database file)
+Admin:    admin@hopejobs.com / Admin@123
+Employer: employer@company.com / Employer@123
+Seeker:   seeker@example.com / Seeker@123
 ```
 
 ---
 
 ## 🚀 **For Render Deployment:**
 
-When deploying to Render, you'll need to use MySQL or PostgreSQL (Render doesn't support SQLite in production).
-
-### **Option 1: Use MySQL on Render**
+### **Option 1: Use Same MySQL (Current)**
 
 In Render environment variables, set:
 ```bash
-DATABASE_URL=mysql://freedb_abenitj:RQ%40tY5Q4nK3cfw%2A@sql.freedb.tech:3306/freedb_hope-jobs
+# URL-encoded version for Render
+DATABASE_URL=mysql://freedb_abenitj:RQ%40tY5Q4nK3cfw%2A@sql.freedb.tech:3306/freedb_hope-jobs?connection_limit=5&pool_timeout=20&connect_timeout=10
 ```
 
-And update `prisma/schema.prisma` before deploying:
-```prisma
-datasource db {
-  provider = "mysql"  // Change from sqlite
-  url      = env("DATABASE_URL")
-  relationMode = "prisma"
-}
-```
+**Note:** In Render, use `%40` for `@` and `%2A` for `*` in the password.
 
-### **Option 2: Use PostgreSQL on Render (Better!)**
+### **Option 2: Use Render PostgreSQL (Better for Production)**
 
-Render offers **free PostgreSQL** database!
+Render offers **free PostgreSQL** database:
 
-**Steps:**
-1. On Render, create a "PostgreSQL" database
-2. Copy the "Internal Database URL"
-3. Add to environment variables:
-```bash
-DATABASE_URL=your-postgres-url-from-render
-```
-
-4. Update schema:
-```prisma
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-```
-
----
-
-## 🎯 **Recommended Approach:**
-
-### **Development (Local):**
-```
-✅ SQLite - Fast, no issues
-DATABASE_URL="file:./prisma/dev.db"
-```
-
-### **Production (Render):**
-```
-✅ PostgreSQL - Free on Render, reliable
-DATABASE_URL="postgresql://..."
-```
-
----
-
-## 📋 **How to Switch:**
-
-### **For Local Development (Current):**
-```bash
-# Already done! ✅
-npm run dev
-# Opens on http://localhost:3000
-```
-
-### **For Render Deployment:**
-```bash
-# Option A: Create Render PostgreSQL (Recommended)
-1. Render → New → PostgreSQL
-2. Copy Internal Database URL
-3. Add to environment variables
-4. Update schema provider to "postgresql"
+1. Create PostgreSQL on Render
+2. Copy connection URL
+3. Update environment variables
+4. Change schema provider to `postgresql`
 5. Deploy
 
-# Option B: Use existing MySQL
-1. Keep MySQL URL in Render env vars
-2. Update schema provider to "mysql"
-3. Deploy
+---
+
+## 📊 **Current Status:**
+
+```
+✅ Database: MySQL (Online)
+✅ Host: sql.freedb.tech:3306
+✅ Users: 4 (seeded)
+✅ Server: Running on http://localhost:3000
+✅ Network: http://192.168.0.122:3000
 ```
 
 ---
 
-## ⚡ **Current Status:**
+## 🔧 **Useful Commands:**
 
-**Locally:**
-- ✅ Database: SQLite (dev.db)
-- ✅ Users: 4 seeded
-- ✅ Server: Should be running fast
-- ✅ No connection timeouts!
-
-**For Deployment:**
-- 📝 Need to choose: PostgreSQL (recommended) or MySQL
-- 📝 Update environment variables on Render
-- 📝 Deploy
-
----
-
-## 🎊 **Advantages of This Setup:**
-
-### **Local (SQLite):**
-- ⚡ Lightning fast
-- 🔧 No network issues
-- 💾 Easy to reset/test
-- 🚀 Perfect for development
-
-### **Production (PostgreSQL on Render):**
-- ✅ Free tier available
-- ✅ Hosted on Render (same datacenter = fast)
-- ✅ Reliable connections
-- ✅ Auto-backups
-- ✅ Scalable
-
----
-
-## 🔧 **To Deploy on Render:**
-
-### **1. Create PostgreSQL Database:**
-1. Render Dashboard → New → PostgreSQL
-2. Name: `hope-jobs-db`
-3. Region: Same as web service
-4. Click "Create Database"
-
-### **2. Get Connection String:**
-Copy the "Internal Database URL" from Render PostgreSQL dashboard
-
-### **3. Update Environment Variables:**
+### **View database:**
 ```bash
-DATABASE_URL=postgresql://hope_jobs_user:xxx@dpg-xxx.oregon-postgres.render.com/hope_jobs_db
+npm run db:studio
 ```
 
-### **4. Update schema.prisma:**
-```prisma
-datasource db {
-  provider = "postgresql"  // Changed from sqlite
-  url      = env("DATABASE_URL")
-}
-```
-
-### **5. Commit & Deploy:**
+### **Reset database:**
 ```bash
-git add .
-git commit -m "Ready for production with PostgreSQL"
-git push origin main
+npx prisma db push --accept-data-loss
+npm run db:seed
 ```
 
-Render will auto-deploy!
-
----
-
-## ✅ **Current State:**
-
-```
-✅ Local: SQLite (fast, no issues)
-✅ Database: 4 users seeded
-✅ Ready to use locally
-📝 For Render: Create PostgreSQL (recommended)
+### **Check connection:**
+```bash
+npx prisma db pull
 ```
 
 ---
 
-**Your app is working locally with SQLite now!** 🎉
+## ⚡ **Connection Parameters:**
 
+The database URL includes optimized connection parameters:
+- `connection_limit=5` - Max 5 concurrent connections
+- `pool_timeout=20` - 20 seconds pool timeout
+- `connect_timeout=10` - 10 seconds connect timeout
+
+These settings help avoid connection timeouts with free MySQL hosting.
+
+---
+
+## 🎉 **You're All Set!**
+
+Your app is now running with the online MySQL database. You can:
+
+1. ✅ Test locally on http://localhost:3000
+2. ✅ Deploy to Render/Vercel with same database
+3. ✅ Open to network devices on http://192.168.0.122:3000
+
+**Login and test all features!** 🚀

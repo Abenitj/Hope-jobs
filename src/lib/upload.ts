@@ -1,6 +1,3 @@
-import { writeFile } from 'fs/promises'
-import { join } from 'path'
-
 export async function saveUploadedFile(
   file: File,
   directory: 'avatars' | 'resumes' | 'logos'
@@ -8,18 +5,18 @@ export async function saveUploadedFile(
   const bytes = await file.arrayBuffer()
   const buffer = Buffer.from(bytes)
 
-  // Create unique filename
-  const timestamp = Date.now()
-  const randomString = Math.random().toString(36).substring(7)
-  const extension = file.name.split('.').pop()
-  const filename = `${timestamp}-${randomString}.${extension}`
+  // For avatars, convert to base64 data URI (works on Render/serverless)
+  if (directory === 'avatars') {
+    const base64 = buffer.toString('base64')
+    const dataUri = `data:${file.type};base64,${base64}`
+    return dataUri
+  }
 
-  // Save to public directory
-  const filepath = join(process.cwd(), 'public', 'uploads', directory, filename)
-  await writeFile(filepath, buffer)
-
-  // Return public URL
-  return `/uploads/${directory}/${filename}`
+  // For resumes and logos, also use base64 for now
+  // In production, consider using cloud storage (Cloudinary, S3, etc.)
+  const base64 = buffer.toString('base64')
+  const dataUri = `data:${file.type};base64,${base64}`
+  return dataUri
 }
 
 export function validateImageFile(file: File): { valid: boolean; error?: string } {
