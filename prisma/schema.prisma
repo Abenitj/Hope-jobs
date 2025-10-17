@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = "mysql://freedb_abenitj:RQ@tY5Q4nK3cfw*@sql.freedb.tech:3306/freedb_hope-jobs"
+  url      = env("DATABASE_URL")
   relationMode = "prisma"
 }
 
