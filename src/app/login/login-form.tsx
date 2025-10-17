@@ -38,16 +38,26 @@ export function LoginForm() {
           variant: "destructive",
         })
       } else if (result?.ok) {
-        // Success - redirect to home which will redirect to dashboard
+        // Success - fetch session to get role and redirect to correct dashboard
         toast({
           title: "Success",
           description: "Login successful! Redirecting...",
         })
         
-        // Use router.push with full page reload
-        setTimeout(() => {
+        // Fetch session to determine role
+        const sessionRes = await fetch('/api/auth/session')
+        const session = await sessionRes.json()
+        
+        if (session?.user?.role) {
+          const role = session.user.role
+          const dashboardUrl = role === "ADMIN" ? "/admin/dashboard" 
+            : role === "EMPLOYER" ? "/employer/dashboard" 
+            : "/seeker/dashboard"
+          
+          window.location.href = dashboardUrl
+        } else {
           window.location.href = "/"
-        }, 500)
+        }
       }
     } catch (error) {
       toast({
