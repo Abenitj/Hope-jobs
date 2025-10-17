@@ -5,74 +5,38 @@ export default auth((req) => {
   const { nextUrl, auth } = req
   const isLoggedIn = !!auth?.user
   const userRole = auth?.user?.role
-
-  const isApiRoute = nextUrl.pathname.startsWith("/api")
-  const isAuthRoute = nextUrl.pathname.startsWith("/login") || nextUrl.pathname.startsWith("/register")
-  const isPublicRoute = nextUrl.pathname === "/" || nextUrl.pathname.startsWith("/jobs")
-  
-  const isAdminRoute = nextUrl.pathname.startsWith("/admin")
-  const isEmployerRoute = nextUrl.pathname.startsWith("/employer")
-  const isSeekerRoute = nextUrl.pathname.startsWith("/seeker")
+  const path = nextUrl.pathname
 
   // Allow API routes
-  if (isApiRoute) {
-    return NextResponse.next()
-  }
+  if (path.startsWith("/api")) return NextResponse.next()
 
   // Redirect logged-in users away from auth routes
-  if (isAuthRoute && isLoggedIn) {
-    if (userRole === "ADMIN") {
-      return NextResponse.redirect(new URL("/admin/dashboard", nextUrl))
-    } else if (userRole === "EMPLOYER") {
-      return NextResponse.redirect(new URL("/employer/dashboard", nextUrl))
-    } else if (userRole === "SEEKER") {
-      return NextResponse.redirect(new URL("/seeker/dashboard", nextUrl))
-    }
+  if ((path === "/login" || path === "/register") && isLoggedIn) {
+    const dashboard = userRole === "ADMIN" ? "/admin/dashboard" 
+      : userRole === "EMPLOYER" ? "/employer/dashboard" 
+      : "/seeker/dashboard"
+    return NextResponse.redirect(new URL(dashboard, nextUrl))
   }
 
-  // Redirect logged-in users from home to their dashboard
-  if (nextUrl.pathname === "/" && isLoggedIn) {
-    if (userRole === "ADMIN") {
-      return NextResponse.redirect(new URL("/admin/dashboard", nextUrl))
-    } else if (userRole === "EMPLOYER") {
-      return NextResponse.redirect(new URL("/employer/dashboard", nextUrl))
-    } else if (userRole === "SEEKER") {
-      return NextResponse.redirect(new URL("/seeker/dashboard", nextUrl))
-    }
+  // Redirect logged-in users from home to dashboard
+  if (path === "/" && isLoggedIn) {
+    const dashboard = userRole === "ADMIN" ? "/admin/dashboard" 
+      : userRole === "EMPLOYER" ? "/employer/dashboard" 
+      : "/seeker/dashboard"
+    return NextResponse.redirect(new URL(dashboard, nextUrl))
   }
 
-  // Allow public routes for non-logged-in users
-  if (isPublicRoute && !isLoggedIn) {
-    return NextResponse.next()
-  }
+  // Protect role-specific routes
+  const roleRoutes = [
+    { prefix: "/admin", requiredRole: "ADMIN" },
+    { prefix: "/employer", requiredRole: "EMPLOYER" },
+    { prefix: "/seeker", requiredRole: "SEEKER" }
+  ]
 
-  // Protect admin routes
-  if (isAdminRoute) {
-    if (!isLoggedIn) {
-      return NextResponse.redirect(new URL("/login", nextUrl))
-    }
-    if (userRole !== "ADMIN") {
-      return NextResponse.redirect(new URL("/", nextUrl))
-    }
-  }
-
-  // Protect employer routes
-  if (isEmployerRoute) {
-    if (!isLoggedIn) {
-      return NextResponse.redirect(new URL("/login", nextUrl))
-    }
-    if (userRole !== "EMPLOYER") {
-      return NextResponse.redirect(new URL("/", nextUrl))
-    }
-  }
-
-  // Protect seeker routes
-  if (isSeekerRoute) {
-    if (!isLoggedIn) {
-      return NextResponse.redirect(new URL("/login", nextUrl))
-    }
-    if (userRole !== "SEEKER") {
-      return NextResponse.redirect(new URL("/", nextUrl))
+  for (const { prefix, requiredRole } of roleRoutes) {
+    if (path.startsWith(prefix)) {
+      if (!isLoggedIn) return NextResponse.redirect(new URL("/login", nextUrl))
+      if (userRole !== requiredRole) return NextResponse.redirect(new URL("/", nextUrl))
     }
   }
 
@@ -80,7 +44,7 @@ export default auth((req) => {
 })
 
 export const config = {
-  matcher: ["/((?!.+\\.[\\w]+$|_next).*)", "/", "/(api|trpc)(.*)"],
+  matcher: ["/((?!_next|api|.*\\.).*)"],
 }
 
 
