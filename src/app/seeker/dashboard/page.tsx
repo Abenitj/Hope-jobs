@@ -2,10 +2,11 @@ import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Briefcase, FileText, Clock, CheckCircle, Eye, MapPin } from "lucide-react"
+import { Briefcase, FileText, Clock, CheckCircle, Eye, MapPin, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
 import { ProfileImage } from "./profile-image"
+import { getTopRecommendations } from "@/lib/recommendations"
 
 async function getSeekerStats(userId: string) {
   const [applications, profile] = await Promise.all([
@@ -49,15 +50,31 @@ async function getSeekerStats(userId: string) {
 }
 
 async function getRecommendedJobs(userId: string) {
-  // Get user's profile skills and preferences
+  // Get user's profile with skills and preferences
   const profile = await db.jobSeekerProfile.findUnique({
     where: { userId },
+    select: {
+      skills: true,
+      preferredJobTypes: true,
+      location: true,
+      experience: true,
+    },
   })
 
-  // Get recent open jobs
+  // Get user's existing applications to exclude already applied jobs
+  const existingApplications = await db.application.findMany({
+    where: { seekerId: userId },
+    select: { jobId: true },
+  })
+  const appliedJobIds = existingApplications.map((app) => app.jobId)
+
+  // Get all open jobs
   const jobs = await db.job.findMany({
     where: {
       status: "OPEN",
+      id: {
+        notIn: appliedJobIds, // Exclude jobs user already applied to
+      },
     },
     include: {
       employer: {
@@ -72,10 +89,17 @@ async function getRecommendedJobs(userId: string) {
       },
     },
     orderBy: { postedAt: "desc" },
-    take: 6,
+    take: 50, // Get more jobs for better recommendations
   })
 
-  return jobs
+  // Use recommendation algorithm to score and rank jobs
+  const recommendedJobs = getTopRecommendations(
+    profile || {},
+    jobs,
+    6 // Return top 6 matches
+  )
+
+  return recommendedJobs
 }
 
 export default async function SeekerDashboard() {
@@ -239,8 +263,11 @@ export default async function SeekerDashboard() {
         <Card className="md:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Recommended Jobs</CardTitle>
-              <CardDescription>Jobs matching your profile</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-amber-500" />
+                Recommended for You
+              </CardTitle>
+              <CardDescription>Jobs matching your skills and preferences</CardDescription>
             </div>
             <Button variant="ghost" size="sm" asChild>
               <Link href="/seeker/jobs">View All</Link>
@@ -258,16 +285,29 @@ export default async function SeekerDashboard() {
                   <Link
                     key={job.id}
                     href={`/seeker/jobs/${job.id}`}
-                    className="flex items-start gap-3 p-3 rounded-lg border hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                    className="flex items-start gap-3 p-3 rounded-lg border hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group"
                   >
-                    <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
+                    <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg group-hover:scale-110 transition-transform">
                       <Briefcase className="h-4 w-4 text-blue-600" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium truncate">{job.title}</h4>
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="font-medium truncate">{job.title}</h4>
+                        {job.matchScore && job.matchScore > 50 && (
+                          <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 text-xs font-semibold shrink-0">
+                            <Sparkles className="h-3 w-3" />
+                            {job.matchScore}%
+                          </div>
+                        )}
+                      </div>
                       <p className="text-sm text-muted-foreground">
                         {job.employer.name}
                       </p>
+                      {job.matchReasons && job.matchReasons.length > 0 && (
+                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 line-clamp-1">
+                          ✓ {job.matchReasons[0]}
+                        </p>
+                      )}
                       <div className="flex items-center gap-2 mt-1">
                         {job.location && (
                           <span className="text-xs text-muted-foreground flex items-center gap-1">

@@ -1,0 +1,32 @@
+
+> hope-jobs@0.1.0 build
+> prisma generate && next build
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+
+✔ Generated Prisma Client (v6.17.1) to ./node_modules/@prisma/client in 209ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Need your database queries to be 1000x faster? Accelerate offers you that and more: https://pris.ly/tip-2-accelerate
+
+   ▲ Next.js 15.5.5
+   - Environments: .env.production, .env
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 8.3s
+   Linting and checking validity of types ...
+Failed to compile.
+
+./src/app/seeker/dashboard/page.tsx:304:30
+Type error: Property 'employer' does not exist on type 'ScoredJob'.
+
+[0m [90m 302 |[39m                       [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+ [90m 303 |[39m                       [33m<[39m[33mp[39m className[33m=[39m[32m"text-sm text-muted-foreground"[39m[33m>[39m
+[31m[1m>[22m[39m[90m 304 |[39m                         {job[33m.[39memployer[33m.[39mname}
+ [90m     |[39m                              [31m[1m^[22m[39m
+ [90m 305 |[39m                       [33m<[39m[33m/[39m[33mp[39m[33m>[39m
+ [90m 306 |[39m                       {job[33m.[39mmatchReasons [33m&&[39m job[33m.[39mmatchReasons[33m.[39mlength [33m>[39m [35m0[39m [33m&&[39m (
+ [90m 307 |[39m                         [33m<[39m[33mp[39m className[33m=[39m[32m"text-xs text-blue-600 dark:text-blue-400 mt-1 line-clamp-1"[39m[33m>[39m[0m
+Next.js build worker exited with code: 1 and signal: null
